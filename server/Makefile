@@ -2,9 +2,6 @@
 TARGET   = server
 
 CC       = gcc
-# compiling flags here
-CFLAGS   = -std=c99 -Wall -O2 -I.
-
 LINKER   = gcc -o
 # linking flags here
 LFLAGS   = -Wall -I. -lm
@@ -13,12 +10,15 @@ LFLAGS   = -Wall -I. -lm
 SRCDIR   = src
 OBJDIR   = obj
 BINDIR   = bin
+COMMONDIR= ../common
 
 SOURCES  := $(wildcard $(SRCDIR)/*.c)
-INCLUDES := $(wildcard $(SRCDIR)/*.h)
+INCLUDES := $(wildcard $(SRCDIR)/*.h) 
 OBJECTS  := $(SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o)
 rm       = rm -f
 
+# compiling flags here
+CFLAGS   = -std=c99 -Wall  -Wextra -O2 -I$(COMMONDIR)
 
 $(BINDIR)/$(TARGET): $(OBJECTS)
 	@mkdir -p bin/
