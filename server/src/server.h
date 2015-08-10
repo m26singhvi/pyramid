@@ -4,6 +4,6 @@
 #define BACKLOG (1000 * 250)
 
 void* server (void *);
-void* receive_data (void *);
+void receive_data (int );
 
 #endif /* __SERVER_H__ */
