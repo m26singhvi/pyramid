@@ -52,6 +52,8 @@ server_add_one_client_fd (client_info_head *cih,
                           uint gids[],
                           uint n_gids);
 
+extern void cli_parser (int cfd, char *buf, uint len);
+extern enum boolean server_del_one_client_fd (client_info_head *cih, int cfd);
 extern client_info_head ci_list_head;
 
 extern unsigned int g_groups[255];
@@ -82,7 +84,7 @@ static int init_server_socket(int server_p)
 {
     int server_port = htons(server_p);
     int server_fd;
-    struct sockaddr_in server_s_addr= {0};
+    struct sockaddr_in server_s_addr; //= {0};
 
     IPV4_SOCKADDR(server_s_addr, AF_INET, server_port, htonl(INADDR_ANY));
 
@@ -284,6 +286,7 @@ void  receive_data (int client_fd)
     if (done)
     {
         printf("Closed connection on descriptor %d\n", client_fd);
+	server_del_one_client_fd(&ci_list_head, client_fd);
 
         /* Closing the descriptor will make epoll remove it
          * from the set of descriptors which are monitored. */
@@ -317,6 +320,10 @@ void handle_data(int client_fd, Tlv_element tlv)
      break;
     }
     
+    case CLI_DATA:
+	cli_parser(client_fd, tlv.value, tlv.length);
+	break;
+	
     default : 
      printf("%s : unknown Attribute, can't handle ", __func__); 
     break;

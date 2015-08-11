@@ -3,15 +3,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "../../common/common.h"
-//#include "../../../parallel/helper.h"
-
-/*
- * S1 : client_group_head
- * S2 : client_group
- * S3 : client_info
- * S4 : client_info_head;
- */
+#include "common.h"
 
 typedef unsigned int uint;
 typedef struct client_group client_group;
@@ -53,7 +45,7 @@ uint max_clients_per_multicast_group = 250;
 client_group_head multicast_groups[1000];
 client_info_head ci_head = {NULL, 0};
 
-static inline uint
+uint
 server_get_max_multicast_groups ()
 {
     return max_multicast_groups;
@@ -71,7 +63,7 @@ server_is_multicast_group_valid (uint gid)
     return (1 <= gid) && (gid <= server_get_max_multicast_groups());
 }
 
-static inline client_group_head *
+client_group_head *
 server_get_client_group_head (uint gid)
 {
     if (server_is_multicast_group_valid(gid)) {
@@ -81,7 +73,7 @@ server_get_client_group_head (uint gid)
     }
 }
 
-static inline client_info_head *
+client_info_head *
 server_get_client_info_head ()
 {
     return &ci_head;
@@ -92,14 +84,14 @@ server_get_client_info_head ()
  */
 client_info_head ci_list_head;
 
-#define FOR_ALL_CLIENT_FDS(p, head, d) \
+#define FOR_ALL_CLIENT_FDS(p, head) \
 		for ((p) = (head)->h; (p); (p) = (p)->r)
 
 #define FOR_ALL_MULTICAST_GROUPS(i) \
 		for (i = 0; i < server_get_max_multicast_groups(); i++)
 
 #define FOR_ALL_GROUP_IDS(p, h) \
-                for ((p) = (h); (p); (p)->n)
+                for ((p) = (h); (p); (p) = (p)->n)
 
 #define FOR_THE_MULTICAST_GROUPS(i, n) \
 		for ((i) = 0; (i) < (n); (i)++)
@@ -111,7 +103,7 @@ client_info *
 server_search_client_fd (client_info_head *head, int cfd)
 {
     client_info *p;
-    FOR_ALL_CLIENT_FDS(p, (head), p->cfd) {
+    FOR_ALL_CLIENT_FDS(p, (head)) {
 	if (cfd == p->cfd) {
 	    return p;
 	}
@@ -267,19 +259,6 @@ server_add_one_new_client_fd (client_info_head *cih,
     client_info *nci = server_alloc_client_info_node();
 
     if (nci) {
-#if 0
-	struct sockaddr_in addr;
-	socklen_t addr_size = sizeof(addr);
-	in_addr_t cip;
-	in_port_t cp;
-
-	if (getpeername(cfd, (struct sockaddr *)&addr, &addr_size) == -1) {
-	    perror("Failed to get peer address while adding client");
-	    return FALSE;
-	}
-
-	print_sockaddr_in(addr);
-#endif
 	client_group * cg = server_add_client_to_groups(nci, gids, n_gids);
 	if (cg == NULL) {
 	    server_destroy_client_info_node(nci);
@@ -364,10 +343,3 @@ server_del_one_client_fd (client_info_head *cih,
 
     return TRUE;
 }
-
-#ifdef MAIN
-int main ()
-{
-    return 0;
-}
-#endif

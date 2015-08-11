@@ -1,13 +1,37 @@
+#include <sys/socket.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <errno.h>
+#include <unistd.h>
+#include <fcntl.h>
 #include "cli_commands.h"
 #include "common.h"
 #include "tlv.h"
-#include <errno.h>
-#include <unistd.h>
 
 int cli_fd;
+
+static int make_socket_non_blocking (int sfd)
+{
+    int flags, s;
+
+    flags = fcntl (sfd, F_GETFL, 0);
+    if (flags == -1)
+    {
+        perror ("fcntl");
+        return -1;
+    }
+
+    flags |= O_NONBLOCK;
+    s = fcntl (sfd, F_SETFL, flags);
+    if (s == -1)
+    {
+        perror ("fcntl");
+        return -1;
+    }
+
+    return 0;
+}
 
 void handle_data(Tlv_element tlv)
 {
@@ -49,7 +73,7 @@ void  receive_data ()
                 perror ("read");
                 done = 1;
             }
-            break;
+            //break;
         }
         else if (count == 0)
         {
@@ -60,8 +84,10 @@ void  receive_data ()
         }
 
         printf("Got some data on an existing fd %d\n",cli_fd);
-        Tlv_element tlv = decode(buf, count);
-        handle_data(tlv);
+	if (count > 0) {
+            Tlv_element tlv = decode(buf, count);
+            handle_data(tlv);
+	}
         /* Write the buffer to standard output */
 /*        int s = write (1, tlv.value, tlv.length);
         if (s == -1)
@@ -165,6 +191,7 @@ void parse_cli(char *cli_string) {
 void cli_main(int fd){
         char str[50];
 	cli_fd = fd;
+	make_socket_non_blocking(fd);
         printf("\n ************ Pyramid CLI Interface *************\n\n");
 
         while(true) {
