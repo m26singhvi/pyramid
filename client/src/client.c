@@ -202,7 +202,7 @@ send_data (int fd)
             Buffer buf;
             char payload[1024];
             memset(payload, 0, 1024);
-            buf.payload = &payload;
+            buf.payload = payload;
             buf.length = 0;
             int encoded_len = encode(STRING_DATA, (void *)buffer , len, &buf);
 	    if ((sent = send(fd, payload, encoded_len, 0)) == -1) {
@@ -226,7 +226,7 @@ send_joining_groups (int fd, uint32_t *groups, int numgroups)
     Buffer buf;
     char payload[1024];
     memset(payload, 0, 1024);
-    buf.payload = &payload;
+    buf.payload = payload;
     buf.length = 0;
     int encoded_len = encode(JOIN_GROUP, (void *)groups, numgroups, &buf);
 	   

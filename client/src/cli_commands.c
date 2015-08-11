@@ -93,7 +93,10 @@ void  receive_data ()
 	if (count > 0) {
             Tlv_element tlv = decode(buf, count);
             done = handle_data(tlv);
+            if (done == 1)
+               break;
 	}
+   
         /* Write the buffer to standard output */
 /*        int s = write (1, tlv.value, tlv.length);
         if (s == -1)
@@ -103,14 +106,7 @@ void  receive_data ()
         }*/
     }
 
-    if (done == 1)
-    {
-        printf("Closed connection on descriptor %d\n", cli_fd);
-
-        /* Closing the descriptor will make epoll remove it
-         * from the set of descriptors which are monitored. */
-        close (cli_fd);
-    }
+        cli_main(cli_fd);
 }
 
 
