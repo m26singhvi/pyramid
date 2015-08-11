@@ -33,19 +33,25 @@ static int make_socket_non_blocking (int sfd)
     return 0;
 }
 
-void handle_data(Tlv_element tlv)
+unsigned int handle_data(Tlv_element tlv)
 {
    switch(tlv.type)
    {
     case CLI_DATA:
     {
      printf("Message Received : \n %s", tlv.value);
-     break;
+     return 0;
     }
-
+    case GOOD_BYE:
+    {
+      printf("Message Complete \n");
+      return 1;
+    } 
     default :
+    {
      printf("%s : unknown Attribute, can't handle ", __func__);
-    break;
+     return -1;
+    }
    }
 }
 
@@ -53,7 +59,7 @@ void handle_data(Tlv_element tlv)
 void  receive_data ()
 {
     printf("\nReceive data");
-    int done = 0;
+    unsigned int done = 0;
 
     while (1)
     {
@@ -86,7 +92,7 @@ void  receive_data ()
         printf("Got some data on an existing fd %d\n",cli_fd);
 	if (count > 0) {
             Tlv_element tlv = decode(buf, count);
-            handle_data(tlv);
+            done = handle_data(tlv);
 	}
         /* Write the buffer to standard output */
 /*        int s = write (1, tlv.value, tlv.length);
@@ -97,7 +103,7 @@ void  receive_data ()
         }*/
     }
 
-    if (done)
+    if (done == 1)
     {
         printf("Closed connection on descriptor %d\n", cli_fd);
 
