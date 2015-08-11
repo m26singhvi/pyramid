@@ -57,6 +57,7 @@ extern enum boolean server_del_one_client_fd (client_info_head *cih, int cfd);
 extern client_info_head ci_list_head;
 
 extern unsigned int g_groups[255];
+
 #define MAX_EVENTS 2500 * 4
 static int make_socket_non_blocking (int sfd)
 {
@@ -221,11 +222,9 @@ int main (int argc, char* argv[]) {
     if(server_tid != -1 && make_socket_non_blocking(server_tid) != -1){
         printf("Server started at port : %d\n", server_port);
         /* Listen for new connections */
-        //init_server_db();
         init_and_listen_epoll_events(server_tid);
 
         /* Waiting for all threads to complete */
-//        pthread_join(server_tid, NULL);
     }
 
     server_cleanup(server_tid);
@@ -248,7 +247,6 @@ void  receive_data (int client_fd)
         char buf[ONE_KB];
 	int flags = 0;
 
-//        count = read (client_fd, buf, sizeof buf);
  	count = recv(client_fd, buf, sizeof buf, flags);
 	buf[count] = '\0';
         if (count == -1)
@@ -308,7 +306,6 @@ void handle_data(int client_fd, Tlv_element tlv)
 	    perror("Failed to fetch peername");
 	    return;
 	}
-      //insertInClientList(&q, client_fd, g_groups, tlv.length);
 	server_add_one_client_fd(&ci_list_head, client_fd, &client_s_addr,
                         g_groups, tlv.length);
     }
