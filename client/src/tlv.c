@@ -7,7 +7,7 @@
 #include "common.h" 
 #include "tlv.h"
 
-#define DEBUG 1
+#define DEBUG 0
 unsigned int g_groups[255];
 
 int encode_string_data(const char *data, const int length, Buffer *buf)
@@ -94,16 +94,16 @@ int encode(Attribute attr, const void *data, const int length, Buffer *buf)
   switch(attr)
   {
    case JOIN_GROUP:
-    printf("Encoding JOIN_GROUP\n");
+//    printf("Encoding JOIN_GROUP\n");
     return encode_join_group((uint32_t*)data, length, buf);
    case STRING_DATA:
-    printf("Encoding STRING_DATA \n");
+//    printf("Encoding STRING_DATA \n");
     return encode_string_data(data, length, buf);
    case CLI_DATA:
-    printf("Encoding CLI_DATA \n");
+//    printf("Encoding CLI_DATA \n");
     return encode_cli_data(data, length, buf);
    case GOOD_BYE:
-    printf("Encoding GOOD_BYE \n");
+//    printf("Encoding GOOD_BYE \n");
     return encode_goodbye(buf);
    default:
     printf("%s : can't Understand the Attribute to be encoded", __FUNCTION__);
@@ -138,7 +138,6 @@ int encode_cli_data(const char *data, const int length, Buffer *buf)
 
 Tlv_element decode(char *buffer, unsigned int buflen)
 {
-  printf("Buflen = %d %s \n", buflen, buffer);
   Tlv_element  tlv;
   
   tlv.type = htons(*(uint16_t*)buffer);

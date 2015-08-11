@@ -164,7 +164,6 @@ main (int argc, char* argv[])
     
     if(argc == 4 && !strcmp(argv[3], "CLI"))
     {
-	printf("\n Client fd : %d", client_s_fd );
 	cli_main(client_s_fd);
     } else {
 

@@ -39,12 +39,12 @@ unsigned int handle_data(Tlv_element tlv)
    {
     case CLI_DATA:
     {
-     printf("Message Received : \n %s", tlv.value);
+     printf("\n%s", tlv.value);
      return 0;
     }
     case GOOD_BYE:
     {
-      printf("Message Complete \n");
+      //printf("Message Complete \n");
       return 1;
     } 
     default :
@@ -58,7 +58,7 @@ unsigned int handle_data(Tlv_element tlv)
 
 void  receive_data ()
 {
-    printf("\nReceive data");
+    //printf("\nReceive data");
     unsigned int done = 0;
 
     while (1)
@@ -90,7 +90,7 @@ void  receive_data ()
         }
 
 	if (count > 0) {
-            printf("Got some data on an existing fd %d\n",cli_fd);
+            //printf("Got some data on an existing fd %d\n",cli_fd);
             Tlv_element tlv = decode(buf, count);
             done = handle_data(tlv);
             if (done == 1)
@@ -121,11 +121,9 @@ void request_cli_data(int cli_type)
     char buffer[8];
     memset(buffer, 0, sizeof buffer);
     sprintf(buffer, "%d", cli_type);
-    printf("\nFetching data from server database.: %s ", buffer);
 
         int len = strlen(buffer);
         int sent = 0;
-        printf("\nLen : %d", len);
         while (len > 0) {
             Buffer buf;
             char payload[1024];
@@ -139,7 +137,6 @@ void request_cli_data(int cli_type)
                 len -= sent;
             }
         }
-        printf("\nData Sent");
 }
 
 
@@ -201,7 +198,8 @@ void cli_main(int fd){
         while(true) {
                 printf("\nPYRAMID# ");
 		if(fgets(str, sizeof(str), stdin) != NULL){
-		 
+		   int len = strlen(str);
+		   str[len-1] = '\0';
                    if(!strcmp(str,"exit")){
                         break;
                    }else if(!strcmp(str, "")){
