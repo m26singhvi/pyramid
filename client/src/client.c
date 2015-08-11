@@ -8,12 +8,13 @@
 #include <string.h>
 #include <ctype.h>
 #include <limits.h>
-
-#include "../../common/common.h" // FIXME: take care of relative addressing
+#include "tlv.h"
+#include "common.h" // FIXME: take care of relative addressing
 
 extern int inet_aton(const char *cp, struct in_addr *inp);
 
 static void send_data(int fd);
+static void send_joining_groups(int fd, uint32_t *groups, int numgroups);
 
 enum client_error_msgs {
     CL_INVALID_IP,
@@ -71,6 +72,9 @@ client_input_sanity_check (int argc,
     int port = 0;
     char *as = argv[1];
     char *ps = argv[2];
+    printf("Address : %s\n", as);
+    printf("Port : %s\n", ps);
+
     int i = 0;
 
     if (argc <= 3) {
@@ -153,10 +157,19 @@ main (int argc, char* argv[])
     if (client_input_sanity_check(argc, argv, &sip, &sp) == FALSE) {
 	exit(EXIT_FAILURE);
     }
-
+ 
     client_s_fd = client_create_tcp_socket();
     client_connect(client_s_fd, sip, sp);
-
+    
+    int numgroups = 0;
+    uint32_t groups[255];
+    for (int i = 0 ; i < (argc-3); i++) 
+    {
+      groups[i] = atoi(argv[i+3]);
+      numgroups = numgroups + 1;
+    }
+    send_joining_groups (client_s_fd, groups, numgroups);
+      
     // Take user input and send it to server
     send_data(client_s_fd);
 
@@ -179,7 +192,13 @@ send_data (int fd)
 	int len = strlen(buffer);
 	int sent = 0;
 	while (len > 0) {
-	    if ((sent = send(fd, buffer, len, 0)) == -1) {
+            Buffer buf;
+            char payload[1024];
+            memset(payload, 0, 1024);
+            buf.payload = &payload;
+            buf.length = 0;
+            int encoded_len = encode(STRING_DATA, (void *)buffer , len, &buf);
+	    if ((sent = send(fd, payload, encoded_len, 0)) == -1) {
 		report_error_and_terminate("Failed to send data");
 	    } else {
 		len -= sent;
@@ -187,3 +206,27 @@ send_data (int fd)
 	}
     }
 }
+
+/*
+ * send_joining_groups ()
+ *
+ * This is a temp func for testing.
+ */
+static void
+send_joining_groups (int fd, uint32_t *groups, int numgroups)
+{
+    int sent = 0;
+    Buffer buf;
+    char payload[1024];
+    memset(payload, 0, 1024);
+    buf.payload = &payload;
+    buf.length = 0;
+    int encoded_len = encode(JOIN_GROUP, (void *)groups, numgroups, &buf);
+	   
+     if ((sent = send(fd, buf.payload, encoded_len, 0)) == -1) 
+        report_error_and_terminate("Failed to send data");
+     else
+       printf("Joining Groups Sent");
+}
+
+
