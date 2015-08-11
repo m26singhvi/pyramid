@@ -57,54 +57,87 @@ extern client_group_head multicast_groups[];
                 for ((p) = (h); (p); (p) = (p)->n)
 
 #define FOR_ALL_CLIENT_FDS(p, head) \
-                for ((p) = (head)->h; (p); (p) = (p)->r)
+		for ((p) = (head)->h; (p); (p) = (p)->r)
 
 static void
-send_data (int fd, char *buffer)
+sh_send_encoded_data (int fd, char *data, Attribute type)
 {
-     int len = strlen(buffer);
-        while (len > 0) {
-            Buffer buf;
-            char payload[1024];
-            memset(payload, 0, 1024);
-            buf.payload = payload;
-            buf.length = 0;
-            int encoded_len = encode(CLI_DATA, (void *)buffer , len, &buf);
- 	    int sent = 0;
-            if ((sent = send(fd, payload, encoded_len, 0)) == -1) {
-                report_error_and_terminate("Failed to send data");
-            } else {
-                len -= sent;
-            }
-        }
+    int len = strlen(data);
+
+     while (len > 0) {
+ 	Buffer buf;
+	char payload[1024];
+	memset(payload, 0, 1024);
+
+	buf.payload = payload;
+	buf.length = 0;
+
+	int encoded_len = encode(type, (void *) data, len, &buf);
+	int sent = 0;
+
+	if ((sent = send(fd, payload, encoded_len, 0)) == -1) {
+	    report_error_and_terminate("Failed to send data");
+	} else {
+	    len -= sent;
+	}
+    }
+}
+
+static inline int
+sh_try_to_send_data (int fd, char *dest, char *src, int tc, int c, Attribute type)
+{
+    if ((tc + c + 1) >= ONE_KB) {
+	sh_send_encoded_data(fd, dest, type);
+	tc = 0;
+    }
+
+    c = sprintf(dest + tc, "%s", src);
+
+    return tc + c;
 }
 
 void
 cli_display_all_multicast_groups (int cfd)
 {
     uint at;
-    client_group *p;
-    char buffer[ONE_KB];
+    client_group *cg;
+    char storage_buffer[ONE_KB];
+    char format_buffer[ONE_KB];
+    int tc = 0;
+    int c = 0;
+
     FOR_ALL_MULTICAST_GROUPS(at) {
-	FOR_ALL_GROUP_IDS(p, multicast_groups[at].h) {
-	    printf("gid %u:\ncfd = %d, cip = %0x, cp = %0x\n",
-		p->gid, p->ci->cfd, p->ci->cip, p->ci->cp);
-	    sprintf(buffer, "gid %u:\ncfd = %d, cip = %0x, cp = %0x\n",
-		p->gid, p->ci->cfd, p->ci->cip, p->ci->cp);
-	    send_data(cfd, buffer);
+	FOR_ALL_GROUP_IDS(cg, multicast_groups[at].h) {
+	    c = snprintf(format_buffer, ONE_KB,
+				"gid %u:\ncfd = %d, cip = %0x, cp = %0x\n",
+				cg->gid, cg->ci->cfd, cg->ci->cip, cg->ci->cp);
+	    tc = sh_try_to_send_data(cfd, storage_buffer, format_buffer, tc, c,
+					CLI_DATA);
 	}
-    }	
+    }
+
+    if (tc) {
+	sh_send_encoded_data(cfd, storage_buffer, CLI_DATA);
+    }
 }
 
 void
 cli_display_all_clients (int cfd)
 {
     client_info *ci;
-    char buffer[ONE_KB];
+    char storage_buffer[ONE_KB];
+    char format_buffer[ONE_KB];
+    int tc = 0;
+    int c = 0;
+
     FOR_ALL_CLIENT_FDS (ci, server_get_client_info_head()) {
-	sprintf(buffer, "%d\n", ci->cfd);
-	printf("%d\n", ci->cfd);
-	send_data(cfd, buffer);
+	c = snprintf(format_buffer, ONE_KB, "%d ", ci->cfd);
+	tc = sh_try_to_send_data(cfd, storage_buffer, format_buffer, tc, c,
+					CLI_DATA);
+    }
+
+    if (tc) {
+	sh_send_encoded_data(cfd, storage_buffer, CLI_DATA);
     }
 }
 
@@ -114,6 +147,7 @@ cli_parser (int cfd, char *buf, uint len)
     char *to = malloc(len + 1);
     int opcode;
     strncpy(to, buf, len);
+    // The opcode in buf in not null terminated, add null
     to[len] = '\0';
 
     opcode = atoi(to);
@@ -125,7 +159,13 @@ cli_parser (int cfd, char *buf, uint len)
     case SHOW_CLIENTS_ALL:
 	cli_display_all_clients(cfd);
 	break;
+    default:
+	printf("Invalid Opcode %d\n", opcode);
+	break;
     }
+
+    sleep(1);
+    sh_send_encoded_data(cfd, buf, GOOD_BYE);
 
     free(to);
 }

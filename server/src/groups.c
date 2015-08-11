@@ -45,6 +45,11 @@ uint max_clients_per_multicast_group = 250;
 client_group_head multicast_groups[1000];
 client_info_head ci_head = {NULL, 0};
 
+/*
+ * This is the header to the all the client information list
+ */
+client_info_head ci_list_head;
+
 uint
 server_get_max_multicast_groups ()
 {
@@ -76,13 +81,9 @@ server_get_client_group_head (uint gid)
 client_info_head *
 server_get_client_info_head ()
 {
-    return &ci_head;
+    return &ci_list_head;
 }
 
-/*
- * This is the header to the all the client information list
- */
-client_info_head ci_list_head;
 
 #define FOR_ALL_CLIENT_FDS(p, head) \
 		for ((p) = (head)->h; (p); (p) = (p)->r)
@@ -102,10 +103,10 @@ client_info_head ci_list_head;
 client_info *
 server_search_client_fd (client_info_head *head, int cfd)
 {
-    client_info *p;
-    FOR_ALL_CLIENT_FDS(p, (head)) {
-	if (cfd == p->cfd) {
-	    return p;
+    client_info *ci;
+    FOR_ALL_CLIENT_FDS(ci, head) {
+	if (cfd == ci->cfd) {
+	    return ci;
 	}
     }
     return NULL;

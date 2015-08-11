@@ -170,6 +170,7 @@ Tlv_element decode(char *buffer, unsigned int buflen)
      break;  
     case GOOD_BYE:
      tlv.value = buffer; 
+     break;
     default:
      printf(" %s Can't Decode %d ! ", __FUNCTION__,htons(*(uint16_t*)buffer) ); 
      break;   

@@ -89,8 +89,8 @@ void  receive_data ()
             break;
         }
 
-        printf("Got some data on an existing fd %d\n",cli_fd);
 	if (count > 0) {
+            printf("Got some data on an existing fd %d\n",cli_fd);
             Tlv_element tlv = decode(buf, count);
             done = handle_data(tlv);
             if (done == 1)
