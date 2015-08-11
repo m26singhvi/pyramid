@@ -2,7 +2,118 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include "cli_commands.h"
-#include "common.h" // FIXME: take care of relative addressing
+#include "common.h"
+#include "tlv.h"
+#include <errno.h>
+#include <unistd.h>
+
+int cli_fd;
+
+void handle_data(Tlv_element tlv)
+{
+   switch(tlv.type)
+   {
+    case CLI_DATA:
+    {
+     printf("Message Received : \n %s", tlv.value);
+     break;
+    }
+
+    default :
+     printf("%s : unknown Attribute, can't handle ", __func__);
+    break;
+   }
+}
+
+
+void  receive_data ()
+{
+    printf("\nReceive data");
+    int done = 0;
+
+    while (1)
+    {
+        ssize_t count;
+        char buf[ONE_KB];
+        int flags = 0;
+
+//        count = read (client_fd, buf, sizeof buf);
+        count = recv(cli_fd, buf, sizeof buf, flags);
+        buf[count] = '\0';
+        if (count == -1)
+        {
+            /* If errno == EAGAIN, that means we have read all
+             * data. So go back to the main loop. */
+            if (errno != EAGAIN)
+            {
+                perror ("read");
+                done = 1;
+            }
+            break;
+        }
+        else if (count == 0)
+        {
+            /* End of file. The remote has closed the
+             * connection. */
+            done = 1;
+            break;
+        }
+
+        printf("Got some data on an existing fd %d\n",cli_fd);
+        Tlv_element tlv = decode(buf, count);
+        handle_data(tlv);
+        /* Write the buffer to standard output */
+/*        int s = write (1, tlv.value, tlv.length);
+        if (s == -1)
+        {
+            perror ("write");
+           abort ();
+        }*/
+    }
+
+    if (done)
+    {
+        printf("Closed connection on descriptor %d\n", cli_fd);
+
+        /* Closing the descriptor will make epoll remove it
+         * from the set of descriptors which are monitored. */
+        close (cli_fd);
+    }
+}
+
+
+
+/*
+ * send_data ()
+ *
+ * This is a temp func for testing.
+ */
+void request_cli_data(int cli_type)
+{
+    char buffer[8];
+    memset(buffer, 0, sizeof buffer);
+    sprintf(buffer, "%d", cli_type);
+    printf("\nFetching data from server database.: %s ", buffer);
+
+        int len = strlen(buffer);
+        int sent = 0;
+        printf("\nLen : %d", len);
+        while (len > 0) {
+            Buffer buf;
+            char payload[1024];
+            memset(payload, 0, 1024);
+            buf.payload = &payload;
+            buf.length = 0;
+            int encoded_len = encode(CLI_DATA, (void *)buffer , len, &buf);
+            if ((sent = send(cli_fd, payload, encoded_len, 0)) == -1) {
+                report_error_and_terminate("Failed to send data");
+            } else {
+                len -= sent;
+            }
+        }
+        printf("\nData Sent");
+}
+
 
 
 void cli_clear_screen(void) {
@@ -18,18 +129,18 @@ void cli_help(void) {
 }
 
 void cli_print_multicast_groups(void) {
-        // CLI TYPE = 1
-        int cli_type = 1;
         printf("\nAvailable Multicast groups list:\n");
+	request_cli_data(SHOW_MULTICAST_GROUPS);
+	receive_data();
 }
 
 void cli_print_clients(void) {
-    // CLI_TYPE = 2
-    int cli_type = 2;
-    printf("\nList of available clients:\n");
-    
+	printf("\nList of available clients:\n");
+	request_cli_data(SHOW_CLIENTS_ALL);
+	receive_data();
 }
 
+/* TO-DO */
 void cli_print_multicast_group_clients(int group_id) {
         printf("\nFollowing clients are available in multicast group %d\n", group_id);
         printf("\n*****Under Development*****\n");
@@ -51,8 +162,9 @@ void parse_cli(char *cli_string) {
 }
 
 //To-Do : when server starts, open a terminal and call this function
-void cli_main(){
+void cli_main(int fd){
         char str[50];
+	cli_fd = fd;
         printf("\n ************ Pyramid CLI Interface *************\n\n");
 
         while(true) {

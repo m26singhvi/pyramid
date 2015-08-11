@@ -164,22 +164,22 @@ main (int argc, char* argv[])
     
     if(argc == 4 && !strcmp(argv[3], "CLI"))
     {
-	cli_main();
-	return 0;
-    }
+	printf("\n Client fd : %d", client_s_fd );
+	cli_main(client_s_fd);
+    } else {
 
-    int numgroups = 0;
-    uint32_t groups[255];
-    for (int i = 0 ; i < (argc-3); i++) 
-    {
-      groups[i] = atoi(argv[i+3]);
-      numgroups = numgroups + 1;
-    }
-    send_joining_groups (client_s_fd, groups, numgroups);
+        int numgroups = 0;
+        uint32_t groups[255];
+        for (int i = 0 ; i < (argc-3); i++) 
+        {
+           groups[i] = atoi(argv[i+3]);
+           numgroups = numgroups + 1;
+        }
+        send_joining_groups (client_s_fd, groups, numgroups);
       
-    // Take user input and send it to server
-    send_data(client_s_fd);
-
+        // Take user input and send it to server
+        send_data(client_s_fd);
+    }	
     client_close_fd(client_s_fd);
 
     return 0;

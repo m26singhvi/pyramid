@@ -1,6 +1,8 @@
 #ifndef __TLV_H__
 #define __TLV_H__
 
+#include <stdint.h>
+
 #define BUFFER_SIZE 1024
 
 typedef enum Attribute

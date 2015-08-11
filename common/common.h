@@ -14,6 +14,11 @@ enum boolean {
     TRUE
 };
 
+enum cli_type {
+    SHOW_MULTICAST_GROUPS,
+    SHOW_CLIENTS_ALL
+};
+
 struct thread_args {
     int argc;
     char** argv;
