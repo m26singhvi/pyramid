@@ -233,7 +233,7 @@ send_joining_groups (int fd, uint32_t *groups, int numgroups)
      if ((sent = send(fd, buf.payload, encoded_len, 0)) == -1) 
         report_error_and_terminate("Failed to send data");
      else
-       printf("Joining Groups Sent");
+       printf("Joining Groups Sent\n");
 }
 
 

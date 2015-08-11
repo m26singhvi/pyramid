@@ -145,7 +145,9 @@ void request_cli_data(int cli_type)
 
 
 void cli_clear_screen(void) {
-        system("clear");
+   if(system("clear") == -1) {
+	report_error_and_terminate("\nFailed to clear screen");
+   }	
 }
 
 void cli_help(void) {
@@ -198,14 +200,16 @@ void cli_main(int fd){
 
         while(true) {
                 printf("\nPYRAMID# ");
-		gets(str);
-                if(!strcmp(str,"exit")){
+		if(fgets(str, sizeof(str), stdin) != NULL){
+		 
+                   if(!strcmp(str,"exit")){
                         break;
-                }else if(!strcmp(str, "")){
+                   }else if(!strcmp(str, "")){
 			continue;
+		   }
+                   parse_cli(str);
+                   continue;
 		}
-                parse_cli(str);
-                continue;
         }
         printf("\n***** End *****\n");
 }
