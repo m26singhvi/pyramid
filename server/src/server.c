@@ -56,7 +56,7 @@ server_add_one_client_fd (client_info_head *cih,
 
 extern client_info_head ci_list_head;
 
-extern g_groups[255];
+extern unsigned int g_groups[255];
 #define MAX_EVENTS 2500 * 4
 static int make_socket_non_blocking (int sfd)
 {

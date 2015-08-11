@@ -8,6 +8,7 @@
 #include "tlv.h"
 
 #define DEBUG 1
+unsigned int g_groups[255];
 
 int encode_string_data(const char *data, const int length, Buffer *buf)
 {
@@ -71,12 +72,40 @@ int encode(Attribute attr, const void *data, const int length, Buffer *buf)
    case STRING_DATA:
     printf("Encoding STRING_DATA \n");
     return encode_string_data(data, length, buf);
+   case CLI_DATA:
+    printf("Encoding CLI_DATA \n");
+    return encode_cli_data(data, length, buf);
    default:
     printf("%s : can't Understand the Attribute to be encoded", __FUNCTION__);
     break;
   }
   return 0;
 }
+
+int encode_cli_data(const char *data, const int length, Buffer *buf)
+{
+   char *curP = buf->payload + buf->length;
+   
+   if ((length <= 0) || (length >= 1024))
+   {
+     printf(" %s :  can't encode , Data Length = %d", __FUNCTION__, length);
+     return 0;
+   }
+
+   *(uint16_t *)curP = htons(CLI_DATA);
+   *(uint16_t *)(curP + 2) = htons(length);
+    buf->length  += 4;
+    memcpy(curP + 4 , data, length);
+    buf->length  += length;
+
+#if (DEBUG)   
+    printf("Encoded Length = %d \n", buf->length);
+    printf("%s ...%s\n", __FUNCTION__, buf->payload);
+#endif   
+ 
+  return buf->length;
+}
+
 Tlv_element decode(char *buffer, unsigned int buflen)
 {
   printf("Buflen = %d %s \n", buflen, buffer);
@@ -96,17 +125,20 @@ Tlv_element decode(char *buffer, unsigned int buflen)
      break;
     case JOIN_GROUP:
     {
-     int numgroups = tlv.length/4;
-     int groups[255];
-     printf("Num Groups = %d", numgroups);
-     for (int i = 0 ; i < numgroups ; i++)
+     tlv.length = tlv.length/4;
+     printf("Num Groups = %d \n", tlv.length);
+     for (int i = 0 ; i < tlv.length ; i++)
      {
-       groups[i] = htons(*(uint32_t *)buffer);
+       g_groups[i] = htons(*(uint32_t *)buffer);
        buffer = buffer + 4;
-       printf(" Joining Group : %d \n", groups[i]);
+       printf(" Joining Group : %d \n", g_groups[i]);
      }
+    tlv.value = g_groups;
     }
     break;
+    case CLI_DATA:
+     tlv.value = buffer;
+     break;   
     default:
      printf(" %s Can't Decode %d ! ", __FUNCTION__,htons(*(uint16_t*)buffer) ); 
      break;   

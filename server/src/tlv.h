@@ -9,7 +9,8 @@ typedef enum Attribute
   JOIN_GROUP = 1,
   GOOD_BYE = 2,
   STRING_DATA = 3,
-  INT32_DATA = 4, 
+  INT32_DATA = 4,
+  CLI_DATA = 5, 
   MAX = 65536
 }Attribute;
 
@@ -28,6 +29,7 @@ typedef struct
 
 int encode(Attribute attr, const void *data, const int length, Buffer *buf);
 int encode_string_data(const char *data, const int length, Buffer *buf);
+int encode_cli_data(const char *data, const int length, Buffer *buf);
 int encode_join_group(uint32_t *data, const int length, Buffer *buf);
 Tlv_element decode(char *buffer, unsigned int buflen);
 
