@@ -10,7 +10,53 @@
 #include <errno.h>
 #include "server.h"
 #include "common.h" 
+#include "tlv.h"
+//#include "server_db.h"
 
+#include "../../common/common.h"
+
+typedef unsigned int uint;
+typedef struct client_group client_group;
+typedef struct client_info client_info;
+
+typedef struct client_group_head {
+    client_group *h;
+    uint tc; // total number of clients in this group
+} client_group_head;
+
+struct client_group {
+    client_group *p; // previous node
+    client_group *n; // next node
+    client_info *ci;
+    client_group *ncg; // next client_group
+    uint gid; // multicast group id
+};
+
+typedef struct client_info_head {
+    client_info *h;
+    uint tc; // total number of clients connected
+} client_info_head;
+
+struct client_info {
+    client_info *l; // left node
+    client_info *r; // right node
+    client_group *cg;
+    uint tgid; // total number of groups this client is registered to
+    int cfd; // client fd
+    in_addr_t cip; // client IP
+    in_port_t cp; // client port
+};
+
+extern enum boolean
+server_add_one_client_fd (client_info_head *cih,
+                          int cfd,
+                          struct sockaddr_in * const sa,
+                          uint gids[],
+                          uint n_gids);
+
+extern client_info_head ci_list_head;
+
+extern g_groups[255];
 #define MAX_EVENTS 2500 * 4
 static int make_socket_non_blocking (int sfd)
 {
@@ -59,6 +105,7 @@ static int init_server_socket(int server_p)
 }
 static void handle_new_client_connections(struct epoll_event ev, int epollfd, int server_fd)
 {
+    printf("\nHandle New Client Connection");
     while(1){
         struct sockaddr in_addr;
         socklen_t in_len;
@@ -174,10 +221,11 @@ int main (int argc, char* argv[]) {
     if(server_tid != -1 && make_socket_non_blocking(server_tid) != -1){
         printf("Server started at port : %d\n", server_port);
         /* Listen for new connections */
+        //init_server_db();
         init_and_listen_epoll_events(server_tid);
 
         /* Waiting for all threads to complete */
-        pthread_join(server_tid, NULL);
+//        pthread_join(server_tid, NULL);
     }
 
     server_cleanup(server_tid);
@@ -191,14 +239,18 @@ int main (int argc, char* argv[]) {
  */
 void  receive_data (int client_fd)
 {
+    printf("\nReceive data");
     int done = 0;
 
     while (1)
     {
         ssize_t count;
         char buf[ONE_KB];
+	int flags = 0;
 
-        count = read (client_fd, buf, sizeof buf);
+//        count = read (client_fd, buf, sizeof buf);
+ 	count = recv(client_fd, buf, sizeof buf, flags);
+	buf[count] = '\0';
         if (count == -1)
         {
             /* If errno == EAGAIN, that means we have read all
@@ -219,13 +271,16 @@ void  receive_data (int client_fd)
         }
 
         printf("Got some data on an existing fd %d\n",client_fd);
+        Tlv_element tlv = decode(buf, count);
+        handle_data(client_fd, tlv);
         /* Write the buffer to standard output */
-        int s = write (1, buf, count);
+        /*int s = write (1, tlv.value, tlv.length);
+	printf("\nA.");
         if (s == -1)
         {
             perror ("write");
             abort ();
-        }
+        }*/
     }
 
     if (done)
@@ -237,3 +292,53 @@ void  receive_data (int client_fd)
         close (client_fd);
     }
 }
+
+
+void handle_data(int client_fd, Tlv_element tlv)
+{ 
+   switch(tlv.type)
+   {
+    case JOIN_GROUP:
+    {
+	struct sockaddr_in client_s_addr;
+	socklen_t size = sizeof(client_s_addr);
+	int res = getpeername(client_fd, (struct sockaddr *) &client_s_addr, &size);
+	if (res == -1) {
+	    perror("Failed to fetch peername");
+	    return;
+	}
+      //insertInClientList(&q, client_fd, g_groups, tlv.length);
+	server_add_one_client_fd(&ci_list_head, client_fd, &client_s_addr,
+                        g_groups, tlv.length);
+    }
+    printf(" All groups joined \n"); 
+    break;    
+    case STRING_DATA:
+    {
+     printf("Message Received : \n %s", tlv.value); 
+     break;
+    }
+    
+    default : 
+     printf("%s : unknown Attribute, can't handle ", __func__); 
+    break;
+   }
+}
+
+/*
+ * This function receives request from cli module and sends the requested data in a string format.
+ */
+void *cli_request_handler(void* args)
+{
+    int cli_request_type = (int)args;
+    switch (cli_request_type)
+    {
+        case 1: //show multicast groups
+                //printAllGroupsDetails();
+                return "";
+        default:
+                return NULL;
+    }
+}
+
+
