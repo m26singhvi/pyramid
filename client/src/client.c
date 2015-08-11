@@ -10,6 +10,7 @@
 #include <limits.h>
 #include "tlv.h"
 #include "common.h" // FIXME: take care of relative addressing
+#include "cli_commands.h"
 
 extern int inet_aton(const char *cp, struct in_addr *inp);
 
@@ -161,6 +162,12 @@ main (int argc, char* argv[])
     client_s_fd = client_create_tcp_socket();
     client_connect(client_s_fd, sip, sp);
     
+    if(argc == 4 && !strcmp(argv[3], "CLI"))
+    {
+	cli_main();
+	return 0;
+    }
+
     int numgroups = 0;
     uint32_t groups[255];
     for (int i = 0 ; i < (argc-3); i++) 
