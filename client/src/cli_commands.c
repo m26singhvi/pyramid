@@ -128,7 +128,7 @@ void request_cli_data(int cli_type)
             Buffer buf;
             char payload[1024];
             memset(payload, 0, 1024);
-            buf.payload = &payload;
+            buf.payload = payload;
             buf.length = 0;
             int encoded_len = encode(CLI_DATA, (void *)buffer , len, &buf);
             if ((sent = send(cli_fd, payload, encoded_len, 0)) == -1) {

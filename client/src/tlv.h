@@ -33,6 +33,7 @@ int encode(Attribute attr, const void *data, const int length, Buffer *buf);
 int encode_string_data(const char *data, const int length, Buffer *buf);
 int encode_cli_data(const char *data, const int length, Buffer *buf);
 int encode_join_group(uint32_t *data, const int length, Buffer *buf);
+int encode_goodbye(Buffer *buf);
 Tlv_element decode(char *buffer, unsigned int buflen);
 
 

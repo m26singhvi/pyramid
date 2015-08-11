@@ -62,6 +62,33 @@ int encode_join_group(uint32_t *groups, int numgroups , Buffer *buf)
   return buf->length;
 }
 
+
+int encode_goodbye(Buffer *buf)
+{
+   char data[] = "goodbye";
+   int length = strlen(data); 
+   char *curP = buf->payload + buf->length;
+   
+   if ((length <= 0) || (length >= 1024))
+   {
+     printf(" %s :  can't encode , Data Length = %d", __FUNCTION__, length);
+     return 0;
+   }
+
+   *(uint16_t *)curP = htons(GOOD_BYE);
+   *(uint16_t *)(curP + 2) = htons(length);
+    buf->length  += 4;
+    memcpy(curP + 4 , data, length);
+    buf->length  += length;
+
+#if (DEBUG)   
+    printf("Encoded Length = %d \n", buf->length);
+    printf("%s ...%s\n", __FUNCTION__, buf->payload);
+#endif   
+ 
+  return buf->length;
+}
+
 int encode(Attribute attr, const void *data, const int length, Buffer *buf)
 {
   switch(attr)
@@ -75,6 +102,9 @@ int encode(Attribute attr, const void *data, const int length, Buffer *buf)
    case CLI_DATA:
     printf("Encoding CLI_DATA \n");
     return encode_cli_data(data, length, buf);
+   case GOOD_BYE:
+    printf("Encoding GOOD_BYE \n");
+    return encode_goodbye(buf);
    default:
     printf("%s : can't Understand the Attribute to be encoded", __FUNCTION__);
     break;
@@ -133,12 +163,13 @@ Tlv_element decode(char *buffer, unsigned int buflen)
        buffer = buffer + 4;
        printf(" Joining Group : %d \n", g_groups[i]);
      }
-    tlv.value = g_groups;
     }
     break;
     case CLI_DATA:
      tlv.value = buffer;
-     break;   
+     break;  
+    case GOOD_BYE:
+     tlv.value = buffer; 
     default:
      printf(" %s Can't Decode %d ! ", __FUNCTION__,htons(*(uint16_t*)buffer) ); 
      break;   
