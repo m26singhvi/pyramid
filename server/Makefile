@@ -18,7 +18,7 @@ OBJECTS  := $(SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o)
 rm       = rm -f
 
 # compiling flags here
-CFLAGS   = -std=c99 -Wall  -Wextra -O2 -I$(COMMONDIR)
+CFLAGS   = -std=c99 -Wall -Werror -Wextra -O2 -I$(COMMONDIR)
 
 $(BINDIR)/$(TARGET): $(OBJECTS)
 	@mkdir -p bin/

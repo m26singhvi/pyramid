@@ -11,9 +11,7 @@
 #include "server.h"
 #include "common.h" 
 #include "tlv.h"
-//#include "server_db.h"
 
-#include "../../common/common.h"
 
 typedef unsigned int uint;
 typedef struct client_group client_group;
@@ -184,8 +182,8 @@ static void init_and_listen_epoll_events(int server_fd)
                 receive_data(events[n].data.fd);
             }
         }
-
     }
+    free(events);
 }
 
 static void server_cleanup(int server_tid){
@@ -323,22 +321,6 @@ void handle_data(int client_fd, Tlv_element tlv)
      printf("%s : unknown Attribute, can't handle ", __func__); 
     break;
    }
-}
-
-/*
- * This function receives request from cli module and sends the requested data in a string format.
- */
-void *cli_request_handler(void* args)
-{
-    int cli_request_type = (int)args;
-    switch (cli_request_type)
-    {
-        case 1: //show multicast groups
-                //printAllGroupsDetails();
-                return "";
-        default:
-                return NULL;
-    }
 }
 
 

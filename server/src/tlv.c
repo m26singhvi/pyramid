@@ -133,7 +133,6 @@ Tlv_element decode(char *buffer, unsigned int buflen)
        buffer = buffer + 4;
        printf(" Joining Group : %d \n", g_groups[i]);
      }
-    tlv.value = g_groups;
     }
     break;
     case CLI_DATA:
