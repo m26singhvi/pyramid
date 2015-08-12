@@ -3,47 +3,16 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include "groups.h"
 #include "common.h"
 
-typedef unsigned int uint;
-typedef struct client_group client_group;
-typedef struct client_info client_info;
-
-typedef struct client_group_head {
-    client_group *h;
-    uint tc; // total number of clients in this group
-} client_group_head;
-
-struct client_group {
-    client_group *p; // previous node
-    client_group *n; // next node
-    client_info *ci;
-    client_group *ncg; // next client_group
-    uint gid; // multicast group id
-};
-
-typedef struct client_info_head {
-    client_info *h;
-    uint tc; // total number of clients connected
-} client_info_head;
-
-struct client_info {
-    client_info *l; // left node
-    client_info *r; // right node
-    client_group *cg;
-    uint tgid; // total number of groups this client is registered to
-    int cfd; // client fd
-    in_addr_t cip; // client IP
-    in_port_t cp; // client port
-};
+uint max_multicast_groups = MAX_MULTICAST_GROUPS;
+uint max_clients_per_multicast_group = MAX_CLIENTS_PER_MULTICAST_GROUP;
 
 /*
  * This is a client multicast group array
  */
-const uint max_multicast_groups = 1000;
-uint max_clients_per_multicast_group = 250;
-client_group_head multicast_groups[1000];
-client_info_head ci_head = {NULL, 0};
+client_group_head multicast_groups[MAX_MULTICAST_GROUPS];
 
 /*
  * This is the header to the all the client information list
@@ -51,13 +20,13 @@ client_info_head ci_head = {NULL, 0};
 client_info_head ci_list_head;
 
 uint
-server_get_max_multicast_groups ()
+server_get_max_multicast_groups (void)
 {
     return max_multicast_groups;
 }
 
 static inline uint
-server_get_max_clients_per_multicast_group ()
+server_get_max_clients_per_multicast_group (void)
 {
     return max_clients_per_multicast_group;
 }
@@ -69,7 +38,13 @@ server_is_multicast_group_valid (uint gid)
 }
 
 client_group_head *
-server_get_client_group_head (uint gid)
+server_get_client_groups_head (void)
+{
+    return multicast_groups;
+}
+
+client_group_head *
+server_get_client_gid_head (uint gid)
 {
     if (server_is_multicast_group_valid(gid)) {
 	return &multicast_groups[gid - 1];
@@ -79,32 +54,17 @@ server_get_client_group_head (uint gid)
 }
 
 client_info_head *
-server_get_client_info_head ()
+server_get_client_info_head (void)
 {
     return &ci_list_head;
 }
 
 
-#define FOR_ALL_CLIENT_FDS(p, head) \
-		for ((p) = (head)->h; (p); (p) = (p)->r)
-
-#define FOR_ALL_MULTICAST_GROUPS(i) \
-		for (i = 0; i < server_get_max_multicast_groups(); i++)
-
-#define FOR_ALL_GROUP_IDS(p, h) \
-                for ((p) = (h); (p); (p) = (p)->n)
-
-#define FOR_THE_MULTICAST_GROUPS(i, n) \
-		for ((i) = 0; (i) < (n); (i)++)
-
-#define FOR_ALL_GROUPS_CLIENT_BELONGS_TO(p, h) \
-			for ((p) = (h); (p); (p) = (p)->ncg)
-
 client_info *
-server_search_client_fd (client_info_head *head, int cfd)
+server_search_client_fd (client_info_head *cih, int cfd)
 {
     client_info *ci;
-    FOR_ALL_CLIENT_FDS(ci, head) {
+    FOR_ALL_CLIENT_FDS(ci, cih) {
 	if (cfd == ci->cfd) {
 	    return ci;
 	}
@@ -120,6 +80,18 @@ server_alloc_client_info_node (void)
 
 static inline void
 server_destroy_client_info_node (client_info *ci)
+{
+    free((void *) ci);
+}
+
+static inline client_group *
+server_alloc_client_group_node (void)
+{
+    return malloc(sizeof(client_group));
+}
+
+static inline void
+server_destroy_client_group_node (client_group *ci)
 {
     free((void *) ci);
 }
@@ -142,18 +114,6 @@ server_initialize_client_info_node (client_info_head *cih,
     nci->cp = cp;
 }
 
-static inline client_group *
-server_alloc_client_group_node (void)
-{
-    return malloc(sizeof(client_group));
-}
-
-static inline void
-server_destroy_client_group_node (client_group *ci)
-{
-    free((void *) ci);
-}
-
 static inline void
 server_initialize_client_group_node (client_group_head *cgh,
 				     client_group *ncg,
@@ -168,6 +128,63 @@ server_initialize_client_group_node (client_group_head *cgh,
     ncg->gid = gid;
 }
 
+static inline void
+server_del_client_from_groups (client_group *cg)
+{
+    client_group_head *cgh = NULL;
+    client_group *me = cg;
+
+    while (cg) {
+	me = cg;
+	cg = cg->ncg;
+	cgh = server_get_client_gid_head(me->gid);
+
+	if (me->p) {
+	    me->p->n = me->n;
+	} else {
+	    cgh->h = me->n;
+	}
+	if (me->n) {
+	    me->n->p = me->p;
+	}
+	cgh->tc--;
+
+	server_destroy_client_group_node(me);
+    }
+}
+
+enum boolean
+server_del_one_client_fd (client_info_head *cih,
+			  int cfd)
+{
+    client_info *ci;
+
+    if (cih == NULL) {
+	return FALSE;
+    }
+    
+    if ((ci = server_search_client_fd(cih, cfd)) == NULL) {
+	printf("Client fd %d does not exist", cfd);
+	return FALSE;
+    }
+
+    server_del_client_from_groups(ci->cg);
+
+    if (ci->l) {
+	ci->l->r = ci->r;
+    } else {
+	cih->h = ci->r;
+    }
+    if (ci->r) {
+	ci->r->l = ci->l;
+    }
+    cih->tc--;
+
+    server_destroy_client_info_node(ci);
+
+    return TRUE;
+}
+
 /*
  * Other APIs rely on the fact that the gids added are valid.
  * This add fucntion should make sure that only valid gids gets added.
@@ -175,7 +192,7 @@ server_initialize_client_group_node (client_group_head *cgh,
 static inline client_group *
 server_add_client_to_one_group (client_info * ci, uint gid, client_group *cg)
 {
-    client_group_head *cgh = server_get_client_group_head(gid);
+    client_group_head *cgh = server_get_client_gid_head(gid);
     client_group *ncg = server_alloc_client_group_node();
     uint mc = server_get_max_clients_per_multicast_group();
 
@@ -199,31 +216,6 @@ server_add_client_to_one_group (client_info * ci, uint gid, client_group *cg)
     cgh->tc++;
     
     return ncg;
-}
-
-static inline void
-server_del_client_from_groups (client_group *cg)
-{
-    client_group_head *cgh = NULL;
-    client_group *me = cg;
-
-    while (cg) {
-	me = cg;
-	cg = cg->ncg;
-	cgh = server_get_client_group_head(me->gid);
-
-	if (me->p) {
-	    me->p->n = me->n;
-	} else {
-	    cgh->h = me->n;
-	}
-	if (me->n) {
-	    me->n->p = me->p;
-	}
-	cgh->tc--;
-
-	server_destroy_client_group_node(me);
-    }
 }
 
 static inline client_group *
@@ -309,38 +301,6 @@ server_add_one_client_fd (client_info_head *cih,
     }
 
     server_add_one_new_client_fd(cih, cfd, sa, gids, n_gids);
-
-    return TRUE;
-}
-
-enum boolean
-server_del_one_client_fd (client_info_head *cih,
-			  int cfd)
-{
-    client_info *ci;
-
-    if (cih == NULL) {
-	return FALSE;
-    }
-    
-    if ((ci = server_search_client_fd(cih, cfd)) == NULL) {
-	printf("Client fd %d does not exist", cfd);
-	return FALSE;
-    }
-
-    server_del_client_from_groups(ci->cg);
-
-    if (ci->l) {
-	ci->l->r = ci->r;
-    } else {
-	cih->h = ci->r;
-    }
-    if (ci->r) {
-	ci->r->l = ci->l;
-    }
-    cih->tc--;
-
-    server_destroy_client_info_node(ci);
 
     return TRUE;
 }

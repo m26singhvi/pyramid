@@ -31,4 +31,6 @@ report_error_and_terminate (char* msg)
     exit(EXIT_FAILURE);
 }
 
+typedef unsigned int uint;
+
 #endif /* __COMMON_H__ */

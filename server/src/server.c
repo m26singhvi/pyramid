@@ -10,55 +10,14 @@
 #include <errno.h>
 #include "server.h"
 #include "common.h" 
+#include "groups.h"
 #include "tlv.h"
-
-
-typedef unsigned int uint;
-typedef struct client_group client_group;
-typedef struct client_info client_info;
-
-typedef struct client_group_head {
-    client_group *h;
-    uint tc; // total number of clients in this group
-} client_group_head;
-
-struct client_group {
-    client_group *p; // previous node
-    client_group *n; // next node
-    client_info *ci;
-    client_group *ncg; // next client_group
-    uint gid; // multicast group id
-};
-
-typedef struct client_info_head {
-    client_info *h;
-    uint tc; // total number of clients connected
-} client_info_head;
-
-struct client_info {
-    client_info *l; // left node
-    client_info *r; // right node
-    client_group *cg;
-    uint tgid; // total number of groups this client is registered to
-    int cfd; // client fd
-    in_addr_t cip; // client IP
-    in_port_t cp; // client port
-};
-
-extern enum boolean
-server_add_one_client_fd (client_info_head *cih,
-                          int cfd,
-                          struct sockaddr_in * const sa,
-                          uint gids[],
-                          uint n_gids);
-
-extern void cli_parser (int cfd, char *buf, uint len);
-extern enum boolean server_del_one_client_fd (client_info_head *cih, int cfd);
-extern client_info_head ci_list_head;
+#include "server_helper.h"
 
 extern unsigned int g_groups[255];
 
 #define MAX_EVENTS 2500 * 4
+
 static int make_socket_non_blocking (int sfd)
 {
     int flags, s;
@@ -238,6 +197,7 @@ int main (int argc, char* argv[]) {
  */
 void  receive_data (int client_fd)
 {
+    client_info_head *cih = server_get_client_info_head();
     printf("\nReceive data");
     int done = 0;
 
@@ -284,7 +244,7 @@ void  receive_data (int client_fd)
     if (done)
     {
         printf("Closed connection on descriptor %d\n", client_fd);
-	server_del_one_client_fd(&ci_list_head, client_fd);
+	server_del_one_client_fd(cih, client_fd);
 
         /* Closing the descriptor will make epoll remove it
          * from the set of descriptors which are monitored. */
@@ -295,6 +255,7 @@ void  receive_data (int client_fd)
 
 void handle_data(int client_fd, Tlv_element tlv)
 { 
+   client_info_head *cih = server_get_client_info_head();
    switch(tlv.type)
    {
     case JOIN_GROUP:
@@ -306,7 +267,7 @@ void handle_data(int client_fd, Tlv_element tlv)
 	    perror("Failed to fetch peername");
 	    return;
 	}
-	server_add_one_client_fd(&ci_list_head, client_fd, &client_s_addr,
+	server_add_one_client_fd(cih, client_fd, &client_s_addr,
                         g_groups, tlv.length);
     }
     printf(" All groups joined \n"); 
@@ -318,7 +279,7 @@ void handle_data(int client_fd, Tlv_element tlv)
     }
     
     case CLI_DATA:
-	cli_parser(client_fd, tlv.value, tlv.length);
+	sh_parse_cmd(client_fd, tlv.value, tlv.length);
 	break;
 	
     default : 

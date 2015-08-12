@@ -1,4 +1,4 @@
-#include <sys/socket.h>
+//#include <sys/socket.h>
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <limits.h>
@@ -6,58 +6,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
 #include "common.h"
+#include "groups.h"
 #include "tlv.h"
-
-
-typedef unsigned int uint;
-typedef struct client_group client_group;
-typedef struct client_info client_info;
-
-typedef struct client_group_head {
-    client_group *h;
-    uint tc; // total number of clients in this group
-} client_group_head;
-
-struct client_group {
-    client_group *p; // previous node
-    client_group *n; // next node
-    client_info *ci;
-    client_group *ncg; // next client_group
-    uint gid; // multicast group id
-};
-
-typedef struct client_info_head {
-    client_info *h;
-    uint tc; // total number of clients connected
-} client_info_head;
-
-struct client_info {
-    client_info *l; // left node
-    client_info *r; // right node
-    client_group *cg;
-    uint tgid; // total number of groups this client is registered to
-    int cfd; // client fd
-    in_addr_t cip; // client IP
-    in_port_t cp; // client port
-};
-
-
-
-
-extern uint server_get_max_multicast_groups();
-extern client_group_head * server_get_client_group_head(uint gid);
-extern client_info_head * server_get_client_info_head();
-extern client_group_head multicast_groups[];
-
-#define FOR_ALL_MULTICAST_GROUPS(i) \
-                for (i = 0; i < server_get_max_multicast_groups(); i++)
-
-#define FOR_ALL_GROUP_IDS(p, h) \
-                for ((p) = (h); (p); (p) = (p)->n)
-
-#define FOR_ALL_CLIENT_FDS(p, head) \
-		for ((p) = (head)->h; (p); (p) = (p)->r)
 
 static void
 sh_send_encoded_data (int fd, char *data, Attribute type)
@@ -96,18 +48,19 @@ sh_try_to_send_data (int fd, char *dest, char *src, int tc, int c, Attribute typ
     return tc + c;
 }
 
-void
-cli_display_all_multicast_groups (int cfd)
+static void
+sh_display_all_multicast_groups (int cfd)
 {
     uint at;
     client_group *cg;
+    client_group_head * mg = server_get_client_groups_head();
     char storage_buffer[ONE_KB];
     char format_buffer[ONE_KB];
     int tc = 0;
     int c = 0;
 
     FOR_ALL_MULTICAST_GROUPS(at) {
-	FOR_ALL_GROUP_IDS(cg, multicast_groups[at].h) {
+	FOR_ALL_GROUP_IDS(cg, mg[at].h) {
 	    c = snprintf(format_buffer, ONE_KB,
 				"gid %u:\ncfd = %d, cip = %0x, cp = %0x\n",
 				cg->gid, cg->ci->cfd, cg->ci->cip, cg->ci->cp);
@@ -121,8 +74,8 @@ cli_display_all_multicast_groups (int cfd)
     }
 }
 
-void
-cli_display_all_clients (int cfd)
+static void
+sh_display_all_clients (int cfd)
 {
     client_info *ci;
     char storage_buffer[ONE_KB];
@@ -142,7 +95,7 @@ cli_display_all_clients (int cfd)
 }
 
 void
-cli_parser (int cfd, char *buf, uint len)
+sh_parse_cmd (int cfd, char *buf, uint len)
 {
     char *to = malloc(len + 1);
     int opcode;
@@ -154,10 +107,10 @@ cli_parser (int cfd, char *buf, uint len)
 
     switch (opcode) {
     case SHOW_MULTICAST_GROUPS:
-	cli_display_all_multicast_groups(cfd);
+	sh_display_all_multicast_groups(cfd);
 	break;
     case SHOW_CLIENTS_ALL:
-	cli_display_all_clients(cfd);
+	sh_display_all_clients(cfd);
 	break;
     default:
 	printf("Invalid Opcode %d\n", opcode);
