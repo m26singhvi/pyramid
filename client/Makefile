@@ -13,7 +13,7 @@ BINDIR   = bin
 COMMONDIR= ../common
 
 SOURCES  := $(wildcard $(SRCDIR)/*.c)
-INCLUDES := $(wildcard $(SRCDIR)/*.h)
+INCLUDES := $(wildcard $(SRCDIR)/*.h) 
 OBJECTS  := $(SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o)
 rm       = rm -f
 
@@ -22,13 +22,16 @@ CFLAGS   = -std=c99 -Wall -Werror -Wextra -O2 -I$(COMMONDIR)
 
 $(BINDIR)/$(TARGET): $(OBJECTS)
 	@mkdir -p bin/
-	@$(LINKER) $@ $(LFLAGS) $(OBJECTS)
+	@$(LINKER) $@ $(LFLAGS) $(OBJECTS) ../common/tlv.o
 	@echo "Linking complete!"
 
-$(OBJECTS): $(OBJDIR)/%.o : $(SRCDIR)/%.c
+$(OBJECTS): $(OBJDIR)/%.o : $(SRCDIR)/%.c $(LIBS)
 	@mkdir -p obj/
-	@$(CC) $(CFLAGS) -c $< -o $@
+	@$(CC) $(CFLAGS) -c $< -o $@  
 	@echo "Compiled "$<" successfully!"
+
+$(LIBS): 
+	@make -C $(COMMONDIR)
 
 .PHONEY: clean
 clean:
