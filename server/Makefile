@@ -15,6 +15,9 @@ COMMONDIR= ../common
 SOURCES  := $(wildcard $(SRCDIR)/*.c)
 INCLUDES := $(wildcard $(SRCDIR)/*.h) 
 OBJECTS  := $(SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o)
+LIBSOURCES := $(wildcard $(COMMONDIR)/*.c)
+LIBOBJECTS := $(LIBSOURCES:$(COMMONDIR/%.c=$(OBJDIR)/%.o)
+
 rm       = rm -f
 
 # compiling flags here
@@ -22,7 +25,7 @@ CFLAGS   = -std=c99 -Wall -Werror -Wextra -O2 -I$(COMMONDIR)
 
 $(BINDIR)/$(TARGET): $(OBJECTS)
 	@mkdir -p bin/
-	@$(LINKER) $@ $(LFLAGS) $(OBJECTS) ../common/tlv.o
+	@$(LINKER) $@ $(LFLAGS) $(OBJECTS) $(LIBOBJECTS)
 	@echo "Linking complete!"
 
 $(OBJECTS): $(OBJDIR)/%.o : $(SRCDIR)/%.c $(LIBS)
