@@ -16,7 +16,10 @@ enum boolean {
 
 enum cli_type {
     SHOW_MULTICAST_GROUPS,
-    SHOW_CLIENTS_ALL
+    SHOW_CLIENTS_ALL,
+    LOGGING_LEVEL_ERROR,
+    LOGGING_LEVEL_INFO,
+    LOGGING_LEVEL_DEBUG
 };
 
 struct thread_args {

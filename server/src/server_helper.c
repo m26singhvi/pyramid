@@ -10,6 +10,7 @@
 #include "common.h"
 #include "groups.h"
 #include "tlv.h"
+#include "logging.h"
 
 static void
 sh_send_encoded_data (int fd, char *data, Attribute type)
@@ -112,6 +113,15 @@ sh_parse_cmd (int cfd, char *buf, uint len)
     case SHOW_CLIENTS_ALL:
 	sh_display_all_clients(cfd);
 	break;
+    case LOGGING_LEVEL_ERROR:
+        logging.level = ERROR;
+        break;
+    case LOGGING_LEVEL_INFO:
+        logging.level = INFO;
+        break;
+    case LOGGING_LEVEL_DEBUG:
+        logging.level = DEBUG;
+        break;
     default:
 	printf("Invalid Opcode %d\n", opcode);
 	break;

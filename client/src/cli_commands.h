@@ -14,6 +14,8 @@ void cli_print_multicast_groups(void);
 
 void cli_print_multicast_group_clients(int);
 
+void cli_logging_level(unsigned char);
+
 void parse_cli(char *cli_string);
 
 void cli_main(int);

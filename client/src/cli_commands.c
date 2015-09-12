@@ -8,6 +8,7 @@
 #include "cli_commands.h"
 #include "common.h"
 #include "tlv.h"
+#include "logging.h"
 
 int cli_fd;
 
@@ -167,6 +168,11 @@ void cli_print_clients(void) {
 	receive_data();
 }
 
+void cli_logging_level(unsigned char level)
+{
+   request_cli_data(level);
+}
+
 /* TO-DO */
 void cli_print_multicast_group_clients(int group_id) {
         printf("\nFollowing clients are available in multicast group %d\n", group_id);
@@ -178,6 +184,12 @@ void parse_cli(char *cli_string) {
                 cli_print_multicast_groups();
         }else if(!strcmp(cli_string, "show clients all")){
                 cli_print_clients();
+        }else if(!strcmp(cli_string, "logging level error")){
+                cli_logging_level(LOGGING_LEVEL_ERROR);
+        }else if(!strcmp(cli_string, "logging level info")){
+                cli_logging_level(LOGGING_LEVEL_INFO);
+        }else if(!strcmp(cli_string, "logging level debug")){
+                cli_logging_level(LOGGING_LEVEL_DEBUG);
         }else if(!strcmp(cli_string, "help")) {
                 cli_help();
         }else if(!strcmp(cli_string, "clear")) {

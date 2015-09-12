@@ -13,6 +13,7 @@
 #include "groups.h"
 #include "tlv.h"
 #include "server_helper.h"
+#include "logging.h"
 
 extern unsigned int g_groups[255];
 
