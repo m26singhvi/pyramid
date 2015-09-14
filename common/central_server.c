@@ -6,7 +6,6 @@ void db_server_divide(char *path, unsigned int job_id, unsigned int n)
 {
    char buf[20];
    char split[100] = "split -dl ";
-   char *temp = buf;
    unsigned int count = 0;
    FILE *fp = fopen(path, "r+");
    while(fgets(buf, 20, fp))
@@ -28,7 +27,8 @@ void db_server_divide(char *path, unsigned int job_id, unsigned int n)
    fclose(fp);
 }
 
-void main()
+int test()
 {
    db_server_divide("/home/praveen/syspgm/test_split", 1, 11);
+   return 0;
 }
