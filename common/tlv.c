@@ -90,6 +90,61 @@ int encode_goodbye(Buffer *buf)
   return buf->length;
 }
 
+int encode_algo_sort(const char *path, const int length, Buffer *buf)
+{
+   char *curP = buf->payload + buf->length;
+   
+   if ((length <= 0) || (length >= 1024))
+   {
+     printf(" %s :  can't encode , Data Length = %d", __FUNCTION__, length);
+     return 0;
+   }
+
+   *(uint16_t *)curP = htons(ALGO_SORT);
+   *(uint16_t *)(curP + 2) = htons(length);
+    buf->length  += 4;
+    memcpy(curP + 4 , path, length);
+    buf->length  += length;
+
+#if (DEBUG)   
+    printf("Encoded Length = %d \n", buf->length);
+    printf("%s ...%s\n", __FUNCTION__, buf->payload);
+#endif   
+ 
+  return buf->length;
+}
+
+int encode_algo_max(const char *data, const int length, Buffer *buf)
+{
+   char *curP = buf->payload + buf->length;
+   
+   if ((length <= 0) || (length >= 1024))
+   {
+     printf(" %s :  can't encode , Data Length = %d", __FUNCTION__, length);
+     return 0;
+   }
+
+   *(uint16_t *)curP = htons(ALGO_MAX);
+   *(uint16_t *)(curP + 2) = htons(length);
+    buf->length  += 4;
+    memcpy(curP + 4 , data, length);
+    buf->length  += length;
+
+#if (DEBUG)   
+    printf("Encoded Length = %d \n", buf->length);
+    printf("%s ...%s\n", __FUNCTION__, buf->payload);
+#endif   
+ 
+  return buf->length;
+}
+
+void encode_tlv_header(TLV_Header *hdr, uint16_t numTlv)
+{
+  hdr->numTlv = htons(numTlv);
+  printf("hdr->numTlv  =  %d \n", hdr->numTlv);
+  hdr->reserved = htons(0);
+}
+
 int encode(Attribute attr, const void *data, const int length, Buffer *buf)
 {
   switch(attr)
