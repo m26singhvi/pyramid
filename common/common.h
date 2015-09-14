@@ -20,6 +20,9 @@ enum cli_type {
     SHOW_JOB_DETAILS,
     SHOW_JOB_RESULTS,
     EXEC_JOB
+    LOGGING_LEVEL_ERROR,
+    LOGGING_LEVEL_INFO,
+    LOGGING_LEVEL_DEBUG
 };
 
 struct thread_args {

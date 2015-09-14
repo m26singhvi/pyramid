@@ -36,6 +36,7 @@ int encode_string_data(const char *data, const int length, Buffer *buf)
 
 int encode_join_group(uint32_t *groups, int numgroups , Buffer *buf)
 {
+   int i = 0;
    char *curP = buf->payload + buf->length;
    
    if ((numgroups <= 0) || (numgroups >= 255))
@@ -48,7 +49,7 @@ int encode_join_group(uint32_t *groups, int numgroups , Buffer *buf)
    *(uint16_t *)(curP + 2) = htons(4*numgroups);
     curP = curP + 4;
     buf->length  += 4;
-    for (int i = 0; i < numgroups; i++)
+    for (i = 0; i < numgroups; i++)
     {
      *(uint32_t *)curP = htons(groups[i]);
       curP = curP + 4;
@@ -139,6 +140,7 @@ int encode_cli_data(const char *data, const int length, Buffer *buf)
 Tlv_element decode(char *buffer, unsigned int buflen)
 {
   printf("Buflen = %d %s \n", buflen, buffer);
+  int i = 0;
   Tlv_element  tlv;
   
   tlv.type = htons(*(uint16_t*)buffer);
@@ -157,7 +159,7 @@ Tlv_element decode(char *buffer, unsigned int buflen)
     {
      tlv.length = tlv.length/4;
      printf("Num Groups = %d \n", tlv.length);
-     for (int i = 0 ; i < tlv.length ; i++)
+     for (i = 0 ; i < tlv.length ; i++)
      {
        g_groups[i] = htons(*(uint32_t *)buffer);
        buffer = buffer + 4;
