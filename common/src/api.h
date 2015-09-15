@@ -2,7 +2,7 @@
 #define __API_H__
 
 typedef enum api_id {
-    FIND_MAX = 1,
+    FIND_MAX = 0,
 
     MAX_API /*Keep this always last*/
 } api_id_t;

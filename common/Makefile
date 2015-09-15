@@ -34,6 +34,14 @@ $(OBJECTS): $(OBJDIR)/%.o : $(SRCDIR)/%.c $(LIBS)
 $(LIBS): 
 	@make -C $(COMMONDIR)
 
+.PHONEY: sanity
+sanity:
+	@$(CC) ut/main_ut.c bin/common_lib.a -I$(SRCDIR) -o ut/ut 
+	@./ut/ut
+	@echo "UT complete!"
+
+
+
 .PHONEY: clean
 clean:
 	@rm -rf obj
