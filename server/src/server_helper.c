@@ -95,11 +95,37 @@ sh_display_all_clients (int cfd)
     }
 }
 
+void 
+sh_display_job_details(long long int job_id)
+{
+    printf("\nJob Details for Job: %lld", job_id);
+}
+
+void
+sh_display_job_results(long long int job_id)
+{
+    printf("\nJob Result for Job: %lld", job_id);
+}
+
+long long
+sh_allocate_job_id()
+{
+    long long int next_job_id = 1;
+    return next_job_id; 
+}
+
+void
+sh_execute_job(long long int job_id)
+{
+    printf("\nExecute Job: %lld", job_id);  
+}
+
 void
 sh_parse_cmd (int cfd, char *buf, uint len)
 {
     char *to = malloc(len + 1);
     int opcode;
+    long long int job_id;
     strncpy(to, buf, len);
     // The opcode in buf in not null terminated, add null
     to[len] = '\0';
@@ -112,6 +138,16 @@ sh_parse_cmd (int cfd, char *buf, uint len)
 	break;
     case SHOW_CLIENTS_ALL:
 	sh_display_all_clients(cfd);
+	break;
+    case SHOW_JOB_DETAILS:
+	sh_display_job_details(job_id);
+	break;
+    case SHOW_JOB_RESULTS:
+	sh_display_job_results(job_id);
+	break;
+    case EXEC_JOB:
+	job_id = sh_allocate_job_id();
+	sh_execute_job(job_id);
 	break;
     case LOGGING_LEVEL_ERROR:
         logging.level = ERROR;
