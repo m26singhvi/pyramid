@@ -21,12 +21,17 @@ bool initJob(int groupId, int jobId, Task *task)
     return false;
   }
   int numClient = 0;
-  Client *client = server_get_client_gid_head(groupId)->h;
-  while(client)
-  { // TODO : check if the client is busy or not 
-   addClientToJob(jobNode, client);
-   client = client->ncg;
-   numClient++;
+  client_group cgh = server_get_client_gid_head(groupId)->h;
+  Client *client = cgh->ci;
+  while(cgh)
+  {
+	if (client->busy == FALSE) {
+	    client = cgh->ci;
+ 	    addClientToJob(jobNode, client);
+	    client->busy = TRUE;
+	    numClient++;
+	}
+	cgh = cgh->ncg;
   }
   // call the api to divide the task here, check with Praveen
 

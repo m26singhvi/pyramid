@@ -7,7 +7,7 @@
 #include "tlv.h"
 #include "common.h"
 
-typedef client_group Client;
+typedef client_info Client;
 
 typedef struct Task
 {

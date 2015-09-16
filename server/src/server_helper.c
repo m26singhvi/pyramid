@@ -125,7 +125,7 @@ sh_parse_cmd (int cfd, char *buf, uint len)
 {
     char *to = malloc(len + 1);
     int opcode;
-    long long int job_id;
+    long long int job_id = 0;
     strncpy(to, buf, len);
     // The opcode in buf in not null terminated, add null
     to[len] = '\0';
