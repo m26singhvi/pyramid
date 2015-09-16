@@ -34,18 +34,20 @@ struct client_info {
     int cfd; // client fd
     in_addr_t cip; // client IP
     in_port_t cp; // client port
+    enum boolean busy; // client's status
 };
 
 extern uint server_get_max_multicast_groups(void);
 extern client_group_head * server_get_client_groups_head(void);
 extern client_group_head * server_get_client_gid_head(uint gid);
-extern client_info_head * server_get_client_info_head(void);
+extern client_info_head * server_get_client_info_head(int);
 extern client_info * server_search_client_fd(client_info_head *cih, int cfd);
 extern enum boolean server_add_one_client_fd(client_info_head *cih, int cfd, struct sockaddr_in * const sa, uint gids[], uint n_gids);
 extern enum boolean server_del_one_client_fd(client_info_head *cih, int cfd);
 
 #define MAX_MULTICAST_GROUPS 1000
-#define MAX_CLIENTS_PER_MULTICAST_GROUP 255;
+#define MAX_CLIENTS_PER_MULTICAST_GROUP 255
+#define MAX_HASHMAP_SIZE 255
 
 #define FOR_ALL_CLIENT_FDS(p, head) \
 		for ((p) = (head)->h; (p); (p) = (p)->r)

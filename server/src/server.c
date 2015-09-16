@@ -198,7 +198,7 @@ int main (int argc, char* argv[]) {
  */
 void  receive_data (int client_fd)
 {
-    client_info_head *cih = server_get_client_info_head();
+    client_info_head *cih = server_get_client_info_head(client_fd);
     printf("\nReceive data");
     int done = 0;
 
@@ -256,7 +256,7 @@ void  receive_data (int client_fd)
 
 void handle_data(int client_fd, Tlv_element tlv)
 { 
-   client_info_head *cih = server_get_client_info_head();
+   client_info_head *cih = server_get_client_info_head(client_fd);
    switch(tlv.type)
    {
     case JOIN_GROUP:
@@ -288,5 +288,3 @@ void handle_data(int client_fd, Tlv_element tlv)
     break;
    }
 }
-
-

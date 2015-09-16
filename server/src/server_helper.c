@@ -84,7 +84,7 @@ sh_display_all_clients (int cfd)
     int tc = 0;
     int c = 0;
 
-    FOR_ALL_CLIENT_FDS (ci, server_get_client_info_head()) {
+    FOR_ALL_CLIENT_FDS (ci, server_get_client_info_head(cfd)) {
 	c = snprintf(format_buffer, ONE_KB, "%d ", ci->cfd);
 	tc = sh_try_to_send_data(cfd, storage_buffer, format_buffer, tc, c,
 					CLI_DATA);

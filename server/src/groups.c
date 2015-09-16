@@ -14,6 +14,8 @@ uint max_clients_per_multicast_group = MAX_CLIENTS_PER_MULTICAST_GROUP;
  */
 client_group_head multicast_groups[MAX_MULTICAST_GROUPS];
 
+client_info_head client_hash_map[MAX_HASHMAP_SIZE];
+
 /*
  * This is the header to the all the client information list
  */
@@ -53,10 +55,18 @@ server_get_client_gid_head (uint gid)
     }
 }
 
-client_info_head *
-server_get_client_info_head (void)
+int
+get_hash (int cfd)
 {
-    return &ci_list_head;
+    return cfd % 255;
+}
+
+client_info_head *
+server_get_client_info_head (int cfd)
+{
+    int hash = get_hash(cfd);
+    return &client_hash_map[hash];
+    /* return &ci_list_head; */
 }
 
 
