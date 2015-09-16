@@ -1,30 +1,55 @@
 # project name (generate executable with this name)
+TARGET   = common_lib.a
 
 CC       = gcc
-LINKER   = gcc -o
+LINKER   = ar
 # linking flags here
-LFLAGS   = -Wall -I. -lm
+LFLAGS   = -Wall -I. 
 
 # change these to set the proper directories where each files shoould be
-SRCDIR   = .
-OBJDIR   = . 
-BINDIR   = .
+SRCDIR   = src
+OBJDIR   = obj
+BINDIR   = bin
 
 SOURCES  := $(wildcard $(SRCDIR)/*.c)
 INCLUDES := $(wildcard $(SRCDIR)/*.h) 
 OBJECTS  := $(SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o)
+LIBSOURCES := $(wildcard $(COMMONDIR)/*.c)
+
 rm       = rm -f
 
 # compiling flags here
-CFLAGS   = -std=c99 -Wall -Werror -Wextra -O2 -I.
+CFLAGS   = -std=c99 -Wall -Werror -Wextra -O2 
 
-libtlv.a : tlv.c
-	gcc -c tlv.c -I.  
-	@ar -rcs libtlv.a tlv.o
+$(BINDIR)/$(TARGET): $(OBJECTS)
+	@mkdir -p bin/
+	@ar rcs $(BINDIR)/$(TARGET)  $(OBJECTS) 
+	@echo "Linking complete!"
+
+$(OBJECTS): $(OBJDIR)/%.o : $(SRCDIR)/%.c $(LIBS)
+	@mkdir -p obj/
+	@$(CC) $(CFLAGS) -c $< -o $@  
+	@echo "Compiled "$<" successfully!"
+
+$(LIBS): 
+	@make -C $(COMMONDIR)
+
+.PHONEY: sanity
+sanity:
+	@$(CC) ut/main_ut.c bin/common_lib.a -I$(SRCDIR) -o ut/ut 
+	@./ut/ut
+	@echo "UT complete!"
+
+
 
 .PHONEY: clean
 clean:
-	@rm -rf *.a
-	@rm -rf *.o
+	@rm -rf obj
+	@rm -rf bin
 	@echo "Cleanup complete!"
 
+.PHONEY: remove
+remove: clean
+	@rm -rf bin
+	@$(rm) $(BINDIR)/$(TARGET)
+	@echo "Executable removed!"

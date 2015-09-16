@@ -10,13 +10,13 @@ LFLAGS   = -Wall -I. -lm
 SRCDIR   = src
 OBJDIR   = obj
 BINDIR   = bin
-COMMONDIR= ../common
+COMMONDIR= ../common/src
+COMMONDIR_OBJ= ../common/bin
 
 SOURCES  := $(wildcard $(SRCDIR)/*.c)
 INCLUDES := $(wildcard $(SRCDIR)/*.h) 
 OBJECTS  := $(SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o)
-LIBSOURCES := $(wildcard $(COMMONDIR)/*.c)
-LIBOBJECTS := $(LIBSOURCES:$(COMMONDIR/%.c=$(OBJDIR)/%.o)
+LIBOBJECTS := $(wildcard $(COMMONDIR_OBJ)/*.a)
 
 rm       = rm -f
 
