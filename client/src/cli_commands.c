@@ -4,11 +4,14 @@
 #include <stdbool.h>
 #include <errno.h>
 #include <unistd.h>
+#include <string.h>
 #include <fcntl.h>
 #include "cli_commands.h"
 #include "common.h"
 #include "tlv.h"
 #include "logging.h"
+
+#define CLI_MAX_WORDS 5
 
 int cli_fd;
 bool init_cli_interface = false;
@@ -139,7 +142,66 @@ void request_cli_data(int cli_type)
     }
 }
 
+static int cli_parse_line(const char *line, char *words[], int max_words)
+{
+    int nwords = 0;
+    const char *p = line;
+    const char *word_start = 0;
+    int inquote = 0;
 
+    while (*p)
+    {
+        if (!(*p == ' '))
+        {
+            word_start = p;
+            break;
+        }
+        p++;
+    }
+
+    while (nwords < max_words - 1)
+    {
+        if (!*p || *p == inquote || (word_start && !inquote && ((*p == ' ') || *p == '|')))
+        {
+            if (word_start)
+            {
+                int len = p - word_start;
+                memcpy(words[nwords] = malloc(len + 1), word_start, len);
+                words[nwords++][len] = 0;
+            }
+            if (!*p)
+                break;
+
+
+            if (inquote)
+                p++; /* skip over trailing quote */
+
+            inquote = 0;
+            word_start = 0;
+        }
+        else if (*p == '"' || *p == '\'')
+        {
+            inquote = *p++;
+            word_start = p;
+        }
+        else
+        {
+            if (!word_start)
+            {
+                if (*p == '|')
+                {
+                    if (!(words[nwords++] = "|"))
+                        return 0;
+                }
+                else if (!(*p == ' '))
+                    word_start = p;
+            }
+
+            p++;
+        }
+    }
+    return nwords;
+}
 
 void cli_clear_screen(void) {
    if(system("clear") == -1) {
@@ -162,7 +224,7 @@ void cli_help(void) {
 		printf("\n\tset job-result-queue size <size>");
 		
 	 printf("\n Execute Commands:");
-		printf("\n\texecute <TASK> file <file_name> <multicast_group_id>");
+		printf("\n\texecute <TASK> <file_name> <multicast_group_id>");
 }
 
 void cli_print_multicast_groups(void) {
@@ -188,16 +250,16 @@ void cli_print_multicast_group_clients(int group_id) {
     printf("\n*****Under Development*****\n");
 }
 
-void cli_print_job_details(int job_id) {
-    printf("\nJob details for job: %d\n", job_id);
+void cli_print_job_details(long long int job_id) {
+    printf("\nJob details for job: %lld\n", job_id);
     printf("\n\tInput: ");
     printf("\n\tTask: ");
     printf("\n\tStatus: ");
     printf("\n");
 }
 
-void cli_print_job_result(int job_id) {
-    printf("\nResult of Job: %d\n", job_id);
+void cli_print_job_result(long long int job_id) {
+    printf("\nResult of Job: %lld\n", job_id);
     printf("\n\tStatus: ");
     printf("\n\tResult: ");
     printf("\n");
@@ -214,36 +276,51 @@ void cli_set_job_result_queue_size(int size) {
 }
 
 void cli_exec_task(int taskid, char *file, int groupid) {
-    printf("\nJob submitted for execution!");
-    printf("Details : %d :  %s : %d", taskid, file, groupid);
+    printf("\nJob submitted for execution!\n");
+    printf("\nDetails : %d :  %s : %d", taskid, file, groupid);
     printf("\n");
 }
 
 void parse_cli(char *cli_string) {
-        if (!strcmp(cli_string, "show multicast groups")){
-                cli_print_multicast_groups();
-        }else if(!strcmp(cli_string, "show clients all")){
-                cli_print_clients();
-        }else if(!strcmp(cli_string, "logging level error")){
-                cli_logging_level(LOGGING_LEVEL_ERROR);
-        }else if(!strcmp(cli_string, "logging level info")){
-                cli_logging_level(LOGGING_LEVEL_INFO);
-        }else if(!strcmp(cli_string, "logging level debug")){
-                cli_logging_level(LOGGING_LEVEL_DEBUG);
-        }else if(!strcmp(cli_string, "help")) {
-                cli_help();
-        }else if(!strcmp(cli_string, "clear")) {
-                cli_clear_screen();
-	}else if(!strncmp(cli_string, "show job-details", strlen("show job-details"))) {
-	        cli_print_job_details(1);
-	}else if(!strncmp(cli_string, "show job-result", strlen("show job-result"))) {
-		cli_print_job_result(1);
-	}else if(!strncmp(cli_string, "exec", strlen("exec"))) {	
-    		cli_exec_task(1, "abc", 1);	
-        }else {
-                printf("\nCommand Not found!\n");
-                printf("\nEnter \"help\" command to check the list of available commands.");
-        }
+    char *words[CLI_MAX_WORDS] = {0}, *cli_string_trimmed;
+    int num_words = 0, i =0;	
+    cli_string_trimmed = malloc(strlen(cli_string)+1);
+    num_words = cli_parse_line(cli_string, words, sizeof(words)/sizeof(words[0]));
+    for(i = 0; i < num_words; i++){
+        strcat(cli_string_trimmed, words[i]);
+        strcat(cli_string_trimmed, " ");
+    }
+    cli_string_trimmed[strlen(cli_string_trimmed)-1]= '\0';    
+
+    if (!strcmp(cli_string_trimmed, "show multicast groups")){
+        cli_print_multicast_groups();
+    } else if(!strcmp(cli_string_trimmed, "show clients all")){
+        cli_print_clients();
+    } else if(!strcmp(cli_string_trimmed, "logging level error")){
+        cli_logging_level(LOGGING_LEVEL_ERROR);
+    } else if(!strcmp(cli_string_trimmed, "logging level info")){
+        cli_logging_level(LOGGING_LEVEL_INFO);
+    } else if(!strcmp(cli_string_trimmed, "logging level debug")){
+        cli_logging_level(LOGGING_LEVEL_DEBUG);
+    } else if(!strcmp(cli_string_trimmed, "help")) {
+        cli_help();
+    } else if(!strcmp(cli_string_trimmed, "clear")) {
+        cli_clear_screen();
+    } else if((!strcmp(cli_string_trimmed, "set job-result-queue size")) && (num_words == 4)) {
+	cli_set_job_result_queue_size(atoi(words[3]));
+    } else if((!strcmp(cli_string_trimmed, "set repository-address")) && (num_words == 4)) {
+        cli_set_repository_address(words[2]);
+    } else if((!strncmp(cli_string_trimmed, "show job-details", strlen("show job-details"))) && (num_words == 3)) {
+        cli_print_job_details(strtol(words[2], NULL, 10));
+    } else if((!strncmp(cli_string_trimmed, "show job-result", strlen("show job-result"))) && (num_words == 3)) {
+   	cli_print_job_result(strtol(words[2], NULL, 10));
+    } else if((!strncmp(cli_string_trimmed, "exec", strlen("exec"))) && (num_words == 4)) {	
+    	cli_exec_task(atoi(words[1]), words[2], atoi(words[3]));	
+    } else {
+        printf("\nCommand Not found!\n");
+        printf("\nEnter \"help\" command to check the list of available commands.");
+    }
+    free(cli_string_trimmed);
 }
 
 //To-Do : when server starts, open a terminal and call this function
