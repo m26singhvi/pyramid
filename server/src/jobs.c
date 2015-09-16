@@ -21,7 +21,7 @@ bool initJob(int groupId, int jobId, Task *task)
     return false;
   }
   int numClient = 0;
-  client_group cgh = server_get_client_gid_head(groupId)->h;
+  client_group *cgh = server_get_client_gid_head(groupId)->h;
   Client *client = cgh->ci;
   while(cgh)
   {
