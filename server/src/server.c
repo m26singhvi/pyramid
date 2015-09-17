@@ -255,7 +255,7 @@ void  receive_data (int client_fd)
 
 
 void handle_data(int client_fd, Tlv_element tlv)
-{ 
+{
    client_info_head *cih = server_get_client_info_head(client_fd);
    switch(tlv.type)
    {
@@ -273,6 +273,7 @@ void handle_data(int client_fd, Tlv_element tlv)
     }
     printf(" All groups joined \n"); 
     break;    
+
     case STRING_DATA:
     {
      printf("Message Received : \n %s", tlv.value); 
