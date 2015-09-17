@@ -210,7 +210,7 @@ void
 sh_parse_cmd (int cfd, char *buff)
 {
     int opcode;
-    long long int job_id;
+    long long int job_id = 0;
     char buf[100];
     char *repo = "";
     int queue_size = 0;

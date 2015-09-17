@@ -122,6 +122,7 @@ server_initialize_client_info_node (client_info_head *cih,
     nci->cfd = cfd;
     nci->cip = cip;
     nci->cp = cp;
+    nci->busy = FALSE;
 }
 
 static inline void
