@@ -285,7 +285,9 @@ void handle_data(int client_fd, Tlv tlv)
     case CLI_DATA:
 	sh_parse_cmd(client_fd, tlv.value, tlv.length);
 	break;
-	
+    case ALGO_ERROR:
+         printf("This client %d couldn't do the job\n", client_fd);
+         break;
     default : 
      printf("%s : unknown Attribute, can't handle ", __func__); 
     break;

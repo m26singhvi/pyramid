@@ -20,6 +20,15 @@ typedef enum Attribute
   MAX = 65536
 }Attribute;
 
+typedef enum ClientErrorType
+{
+  INVALID = 0,
+  FAILURE = 1,
+  LIMITED_RESOURCES = 2,
+  INCAPABLE = 3,
+  MAX_ERROR = 65536
+}ClientErrorType;
+
 typedef struct 
 {
   int length;
@@ -44,7 +53,8 @@ int encode_cli_data(const char *data, const int length, Buffer *buf);
 int encode_join_group(uint32_t *data, const int length, Buffer *buf);
 int encode_goodbye(Buffer *buf);
 int encode_algo_sort(const char *path, const int length, Buffer *buf);
-int encode_algo_max(const char *data, const int lengt, Buffer *buf);
+int encode_algo_max(const char *data, const int length, Buffer *buf);
+int encode_algo_error(uint32_t *error, const int length, Buffer *buf);
 Tlv  decode(char *buffer, unsigned int buflen);
 
 #endif /* __TLV_H__ */
