@@ -28,17 +28,15 @@ typedef struct
 
 typedef struct
 {
- uint16_t numTlv;
- uint16_t reserved; 
+ uint32_t len;
 }TLV_Header;
-
 
 typedef struct
 {
   uint16_t type;
   uint16_t length;
   char *value;
-}Tlv_element;
+}Tlv;
 
 int encode(Attribute attr, const void *data, const int length, Buffer *buf);
 int encode_string_data(const char *data, const int length, Buffer *buf);
@@ -47,7 +45,6 @@ int encode_join_group(uint32_t *data, const int length, Buffer *buf);
 int encode_goodbye(Buffer *buf);
 int encode_algo_sort(const char *path, const int length, Buffer *buf);
 int encode_algo_max(const char *data, const int lengt, Buffer *buf);
-Tlv_element decode(char *buffer, unsigned int buflen);
-void encode_tlv_header(TLV_Header *hdr, uint16_t numTlv);
+Tlv  decode(char *buffer, unsigned int buflen);
 
 #endif /* __TLV_H__ */

@@ -232,7 +232,7 @@ void  receive_data (int client_fd)
         }
 
         printf("Got some data on an existing fd %d\n",client_fd);
-        Tlv_element tlv = decode(buf, count);
+        Tlv tlv = decode(buf, count);
         handle_data(client_fd, tlv);
         /* Write the buffer to standard output */
         /*int s = write (1, tlv.value, tlv.length);
@@ -256,7 +256,7 @@ void  receive_data (int client_fd)
 }
 
 
-void handle_data(int client_fd, Tlv_element tlv)
+void handle_data(int client_fd, Tlv tlv)
 {
    client_info_head *cih = server_get_client_info_head(client_fd);
    switch(tlv.type)

@@ -2,7 +2,7 @@
 #include <string.h>
 #include "tlv.h"
 
-unsigned int handle_data(Tlv_element);
+unsigned int handle_data(Tlv);
 
 void receive_data();
 

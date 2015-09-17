@@ -38,7 +38,7 @@ static int make_socket_non_blocking (int sfd)
     return 0;
 }
 
-unsigned int handle_data(Tlv_element tlv)
+unsigned int handle_data(Tlv tlv)
 {
    switch(tlv.type) {
    case CLI_DATA:
@@ -94,7 +94,7 @@ void  receive_data ()
 
 	if (count > 0) {
             //printf("Got some data on an existing fd %d\n",cli_fd);
-            Tlv_element tlv = decode(buf, count);
+            Tlv tlv = decode(buf, count);
             done = handle_data(tlv);
             if (done == 1)
                break;
