@@ -12,6 +12,7 @@
 #include "groups.h"
 #include "tlv.h"
 #include "logging.h"
+#include "jobs.h"
 
 long long int sh_job_id = 0;
 char *central_repo = "";
@@ -249,6 +250,7 @@ sh_parse_cmd (int cfd, char *buff)
         char *input_file;
         input_file = strtok(NULL, delim);
         sh_execute_job(cfd, sh_job_id, task, group, input_file);
+        initJob(group, sh_job_id, task, input_file);
 	break;
     case LOGGING_LEVEL_ERROR:
         logging.level = ERROR;

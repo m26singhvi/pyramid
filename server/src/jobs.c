@@ -2,17 +2,22 @@
 #include <arpa/inet.h>
 #include <stdlib.h>
 #include <stdio.h>
-
+#include <string.h>
 #include "groups.h"
 #include "common.h"
 #include "jobs.h"
 #include "server_helper.h"
 
 
-bool initJob(int groupId, int jobId, Task *task)
+bool initJob(int groupId, int jobId, int taskType, char *inputFile)
 {
    if ((groupId <= 0)|| (jobId < 0))
     return false;
+   
+  Task *task = (Task *)malloc(sizeof(Task)); //needs to be delted when job is done;
+  memset(task->basePath, 0, 256);
+  memcpy(task->basePath, inputFile, strlen(inputFile));
+  task->taskType = taskType;
  
   JobNode *jobNode = addJob(jobId, task);
   if (jobNode == NULL)
@@ -82,7 +87,7 @@ bool freeClient(int jobId, Client *client)
 bool assignJob(JobNode *jobNode, Task *task)
 {
   ClientNode *current = jobNode->job.head;
-  printf(" Task = %d \n", task->algoType);
+  printf(" Task = %d \n", task->taskType);
   while(current)
   {
    

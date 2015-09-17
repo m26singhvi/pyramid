@@ -354,7 +354,11 @@ void parse_cli(char *cli_string) {
     } else if((!strncmp(cli_string_trimmed, "show job-result", strlen("show job-result"))) && (num_words == 3)) {
    	cli_print_job_result(strtol(words[2], NULL, 10));
     } else if((!strncmp(cli_string_trimmed, "exec", strlen("exec"))) && (num_words == 4)) {	
-    	cli_exec_task(atoi(words[1]), words[2], atoi(words[3]));	
+       int algoType = getAlgoType(words[1]);
+       if (algoType == -1)
+          return;
+       else	
+         cli_exec_task(algoType, words[2], atoi(words[3]));	
     } else {
         printf("\nCommand Not found!\n");
         printf("\nEnter \"help\" command to check the list of available commands.");
@@ -389,3 +393,11 @@ void cli_main(int fd){
     printf("\n***** End *****\n");
 }
 
+int getAlgoType(char * algoType)
+{
+  if (strcmp(algoType, "sort") == 0)  return ALGO_SORT;
+  if (strcmp(algoType, "max") == 0) return ALGO_MAX;
+  
+  printf("Unsupported Algorithm \n" );
+  return -1;
+}

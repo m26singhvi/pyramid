@@ -19,3 +19,5 @@ void cli_logging_level(int);
 void parse_cli(char *cli_string);
 
 void cli_main(int);
+
+int getAlgoType(char *);

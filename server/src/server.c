@@ -14,6 +14,7 @@
 #include "tlv.h"
 #include "server_helper.h"
 #include "logging.h"
+#include "jobs.h"
 
 extern unsigned int g_groups[255];
 
@@ -182,6 +183,7 @@ int main (int argc, char* argv[]) {
     if(server_tid != -1 && make_socket_non_blocking(server_tid) != -1){
         printf("Server started at port : %d\n", server_port);
         /* Listen for new connections */
+        initializeJobDll();
         init_and_listen_epoll_events(server_tid);
 
         /* Waiting for all threads to complete */
