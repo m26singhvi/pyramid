@@ -285,12 +285,17 @@ void handle_data(int client_fd, Tlv tlv)
     case CLI_DATA:
 	sh_parse_cmd(client_fd, tlv.value, tlv.length);
 	break;
-    case ALGO_SORT:
     case ALGO_MAX:
          // TO DO : handle sub-result here
          // store the base path , free the client
          // and check if all the clients are done or not
          // if done, process the sub-results and remove the job
+        printf("\nReceived Algo MAX data from client:");
+        printf("Message Received [MAX]: \n %s", tlv.value); 	
+        break;
+    case ALGO_SORT:
+        printf("\nReceived Algo SORT data from client:");
+	break;
     case ALGO_ERROR:
          printf("This client %d couldn't do the job\n", client_fd);
          break;

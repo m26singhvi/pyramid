@@ -95,16 +95,17 @@ bool freeClient(int jobId, Client *client)
 }
 bool assignJob(JobNode *jobNode, Task *task)
 {
-  ClientNode *current = jobNode->job.head;
+  ClientNode *current = jobNode->job.head->next;
   printf(" Task = %d \n", task->taskType);
   while(current)
   {
-   
+    printf("\n--------------------");  
    //add the index based on spliting here onto basePath
-   //sh_send_encoded_data(current->client->ci->cfd, task->basePath, task->algoType);
+   sh_send_encoded_data(current->client->cfd, task->basePath, task->taskType);
    current = current->next;
   }
-
+//  sh_send_encoded_data(5, task->basePath, 102);
+  printf("\nSent to all clients");
   return true;
 }  
 

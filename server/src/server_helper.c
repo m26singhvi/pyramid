@@ -18,9 +18,10 @@ long long int sh_job_id = 0;
 char *central_repo = "";
 int job_queue_size = 10; // Default job queue size set to 10
 
-static void
+void
 sh_send_encoded_data (int fd, char *data, Attribute type)
 {
+    printf("\nsh_send_encoded_data");
     int len = strlen(data);
 
      while (len > 0) {
@@ -34,15 +35,18 @@ sh_send_encoded_data (int fd, char *data, Attribute type)
 	int encoded_len = encode(type, (void *) data, len, &buf);
 	int sent = 0;
 
+        printf("\nTrying to send encoded data");
+        printf("\n Send Data : fd : %d, payload %s, encoded_len %d, type %d", fd, payload, encoded_len, type);
 	if ((sent = send(fd, payload, encoded_len, 0)) == -1) {
 	    report_error_and_terminate("Failed to send data");
 	} else {
 	    len -= sent;
 	}
     }
+    printf("\nSent Type : %d", type);
 }
 
-static inline int
+int
 sh_try_to_send_data (int fd, char *dest, char *src, int tc, int c, Attribute type)
 {
     if ((tc + c + 1) >= ONE_KB) {
@@ -158,10 +162,10 @@ sh_execute_job(int cfd, long long int job_id, int task, int multicast_groupid, c
 
     c = snprintf(format_buffer, ONE_KB, "\nRequest received to execute: \n\t Job: %lld, cfd %d, task %d, group %d, file %s \n", job_id, cfd, task, multicast_groupid, file);
     tc = sh_try_to_send_data(cfd, storage_buffer, format_buffer, tc, c,
-                                        CLI_DATA);
+                                        task);
 
     if (tc) {
-        sh_send_encoded_data(cfd, storage_buffer, CLI_DATA);
+        sh_send_encoded_data(cfd, storage_buffer, task);
     }
 
 
@@ -249,7 +253,7 @@ sh_parse_cmd (int cfd, char *buff)
         group = atoi(strtok(NULL, delim));
         char *input_file;
         input_file = strtok(NULL, delim);
-        sh_execute_job(cfd, sh_job_id, task, group, input_file);
+        //sh_execute_job(cfd, sh_job_id, task, group, input_file);
         initJob(group, sh_job_id, task, input_file);
 	break;
     case LOGGING_LEVEL_ERROR:
