@@ -25,19 +25,28 @@ bool initJob(int groupId, int jobId, int taskType, char *inputFile)
     printf("Job Id  %d could not be added", jobId);
     return false;
   }
-  int numClient = 0;
-  client_group *cgh = server_get_client_gid_head(groupId)->h;
-  Client *client = cgh->ci;
-  while(cgh)
+  unsigned int numClient = 0;
+  client_group_head *cgh = server_get_client_gid_head(groupId);
+  client_group *cg = cgh->h;
+  while(cg)
   {
-	if (client->busy == FALSE) {
-	    client = cgh->ci;
- 	    addClientToJob(jobNode, client);
-	    client->busy = TRUE;
+	printf("cg=%p, cgh->tc=%d, cg->ci=%p, cg->p=%p, cg->n=%p\n", cg, cgh->tc, cg->ci, cg->p, cg->n);
+	if (cg->ci->busy == FALSE) {
+ 	    addClientToJob(jobNode, cg->ci);
+	    cg->ci->busy = TRUE;
 	    numClient++;
+            printf("I am client \n");
 	}
-	cgh = cgh->n;
+	cg = cg->n;
   }
+  printf("Number of Clients : %d\n", numClient);
+  if (numClient == 0)
+  {
+    //delete the job here , remove from dll
+    printf("Cannot execute the task now");
+    return false;
+  }
+  db_server_divide(task->basePath, jobId, numClient);
   // call the api to divide the task here, check with Praveen
 
   // send tlv to all the clients here 
