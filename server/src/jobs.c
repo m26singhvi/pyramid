@@ -31,7 +31,7 @@ bool initJob(int groupId, int jobId, Task *task)
 	    client->busy = TRUE;
 	    numClient++;
 	}
-	cgh = cgh->ncg;
+	cgh = cgh->n;
   }
   // call the api to divide the task here, check with Praveen
 
