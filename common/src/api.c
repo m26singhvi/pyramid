@@ -88,6 +88,11 @@ api_status_t find_max(void *input, void *output)
     }
 
     int_vector_t result ={&max, 1};
-    return write_op_file(&result , output);
+    if(write_op_file(&result , output) == API_SUCCESS) {
+        free(vec.vector);
+        return API_SUCCESS;
+    }
+    free(vec.vector);
+    return API_INVALID_INPUT;
 }
 
