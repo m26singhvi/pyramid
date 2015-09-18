@@ -285,6 +285,13 @@ void handle_data(int client_fd, Tlv tlv)
     case CLI_DATA:
 	sh_parse_cmd(client_fd, tlv.value, tlv.length);
 	break;
+    case ALGO_MAX:
+        printf("\nReceived Algo MAX data from client:");
+        printf("Message Received [MAX]: \n %s", tlv.value); 	
+        break;
+    case ALGO_SORT:
+        printf("\nReceived Algo SORT data from client:");
+	break;
     case ALGO_ERROR:
          printf("This client %d couldn't do the job\n", client_fd);
          break;
