@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+
 void db_server_divide(char *path, unsigned int job_id, unsigned int n)
 {
    char buf[20];

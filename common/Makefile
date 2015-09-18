@@ -36,7 +36,7 @@ $(LIBS):
 
 .PHONEY: sanity
 sanity:
-	@$(CC) ut/main_ut.c bin/common_lib.a -I$(SRCDIR) -o ut/ut 
+	@$(CC) ut/main_ut.c bin/common_lib.a -I$(SRCDIR) -o ut/ut -g  -O0
 	@./ut/ut
 	@echo "UT complete!"
 

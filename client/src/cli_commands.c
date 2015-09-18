@@ -38,7 +38,7 @@ static int make_socket_non_blocking (int sfd)
     return 0;
 }
 
-unsigned int handle_data(Tlv_element tlv)
+unsigned int handle_data(Tlv tlv)
 {
    switch(tlv.type) {
    case CLI_DATA:
@@ -94,7 +94,7 @@ void  receive_data ()
 
 	if (count > 0) {
             //printf("Got some data on an existing fd %d\n",cli_fd);
-            Tlv_element tlv = decode(buf, count);
+            Tlv tlv = decode(buf, count);
             done = handle_data(tlv);
             if (done == 1)
                break;
@@ -119,11 +119,11 @@ void  receive_data ()
  *
  * This is a temp func for testing.
  */
-void request_cli_data(int cli_type)
+void request_cli_data(char *cli_buff)
 {
-    char buffer[8];
+    char buffer[80];
     memset(buffer, 0, sizeof buffer);
-    sprintf(buffer, "%d", cli_type);
+    sprintf(buffer, "%s", cli_buff);
 
     int len = strlen(buffer);
     int sent = 0;
@@ -228,56 +228,95 @@ void cli_help(void) {
 }
 
 void cli_print_multicast_groups(void) {
+    char buffer[80];
+    memset(buffer, 0, sizeof buffer);
+    sprintf(buffer, "%d", SHOW_MULTICAST_GROUPS);
+
     printf("\nAvailable Multicast groups list:\n");
-    request_cli_data(SHOW_MULTICAST_GROUPS);
+    request_cli_data(buffer);
     receive_data();
 }
 
 void cli_print_clients(void) {
+    char buffer[80];
+    memset(buffer, 0, sizeof buffer);
+    sprintf(buffer, "%d", SHOW_CLIENTS_ALL);
+
     printf("\nList of available clients:\n");
-    request_cli_data(SHOW_CLIENTS_ALL);
+    request_cli_data(buffer);
     receive_data();
 }
 
-void cli_logging_level(unsigned char level)
+void cli_logging_level(int level)
 {
-   request_cli_data(level);
-}
+    char buffer[80];
+    memset(buffer, 0, sizeof buffer);
+    sprintf(buffer, "%d", level);
 
-/* TO-DO */
-void cli_print_multicast_group_clients(int group_id) {
-    printf("\nFollowing clients are available in multicast group %d\n", group_id);
-    printf("\n*****Under Development*****\n");
+   request_cli_data(buffer);
 }
 
 void cli_print_job_details(long long int job_id) {
+    char buffer[80];
+    memset(buffer, 0, sizeof buffer);
+    sprintf(buffer, "%d|%lld", SHOW_JOB_DETAILS, job_id);
+
     printf("\nJob details for job: %lld\n", job_id);
-    printf("\n\tInput: ");
+    request_cli_data(buffer);
+    receive_data();
+
+    /*printf("\n\tInput: ");
     printf("\n\tTask: ");
-    printf("\n\tStatus: ");
+    printf("\n\tStatus: ");*/
     printf("\n");
 }
 
 void cli_print_job_result(long long int job_id) {
+    char buffer[80];
+    memset(buffer, 0, sizeof buffer);
+    sprintf(buffer, "%d|%lld", SHOW_JOB_RESULTS, job_id);
+
     printf("\nResult of Job: %lld\n", job_id);
+    request_cli_data(buffer);
+    receive_data();
+/*
     printf("\n\tStatus: ");
-    printf("\n\tResult: ");
+    printf("\n\tResult: ");*/
     printf("\n");
 }
 
 void cli_set_repository_address(char *address) {
+    char buffer[80];
+    memset(buffer, 0, sizeof buffer);
+    sprintf(buffer, "%d|%s", SET_REPOSITORY, address);
+
     printf("\nCentral data repository address updated: %s", address);
+    request_cli_data(buffer);
+    receive_data();
     printf("\n");
 }
 
 void cli_set_job_result_queue_size(int size) {
-    printf("\nJob result queue size updated to: %d ", size);
+    char buffer[80];
+    memset(buffer, 0, sizeof buffer);
+    sprintf(buffer, "%d|%d", SET_JOB_QUEUE_SIZE, size);
+
+    printf("\nJob result queue size updated to: %d", size);
+    request_cli_data(buffer);
+    receive_data();
     printf("\n");
 }
 
 void cli_exec_task(int taskid, char *file, int groupid) {
-    printf("\nJob submitted for execution!\n");
-    printf("\nDetails : %d :  %s : %d", taskid, file, groupid);
+    char buffer[80];
+    memset(buffer, 0, sizeof buffer);
+    sprintf(buffer, "%d|%d|%d|%s", EXEC_JOB, taskid, groupid, file);
+    
+    printf("\nJob submitted to server for execution!\n");
+    request_cli_data(buffer);
+    receive_data();
+
+/*    printf("\nDetails : %d :  %s : %d", taskid, file, groupid);*/
     printf("\n");
 }
 
@@ -306,24 +345,27 @@ void parse_cli(char *cli_string) {
         cli_help();
     } else if(!strcmp(cli_string_trimmed, "clear")) {
         cli_clear_screen();
-    } else if((!strcmp(cli_string_trimmed, "set job-result-queue size")) && (num_words == 4)) {
+    } else if((!strncmp(cli_string_trimmed, "set job-result-queue size", strlen("set job-result-queue size"))) && (num_words == 4)) {
 	cli_set_job_result_queue_size(atoi(words[3]));
-    } else if((!strcmp(cli_string_trimmed, "set repository-address")) && (num_words == 4)) {
+    } else if((!strncmp(cli_string_trimmed, "set repository-address", strlen("set repository-address"))) && (num_words == 3)) {
         cli_set_repository_address(words[2]);
     } else if((!strncmp(cli_string_trimmed, "show job-details", strlen("show job-details"))) && (num_words == 3)) {
         cli_print_job_details(strtol(words[2], NULL, 10));
     } else if((!strncmp(cli_string_trimmed, "show job-result", strlen("show job-result"))) && (num_words == 3)) {
    	cli_print_job_result(strtol(words[2], NULL, 10));
     } else if((!strncmp(cli_string_trimmed, "exec", strlen("exec"))) && (num_words == 4)) {	
-    	cli_exec_task(atoi(words[1]), words[2], atoi(words[3]));	
+       int algoType = getAlgoType(words[1]);
+       if (algoType == -1)
+          return;
+       else	
+         cli_exec_task(algoType, words[2], atoi(words[3]));	
     } else {
         printf("\nCommand Not found!\n");
         printf("\nEnter \"help\" command to check the list of available commands.");
     }
-    free(cli_string_trimmed);
+    //free(cli_string_trimmed);
 }
 
-//To-Do : when server starts, open a terminal and call this function
 void cli_main(int fd){
     char str[50];
    
@@ -351,3 +393,11 @@ void cli_main(int fd){
     printf("\n***** End *****\n");
 }
 
+int getAlgoType(char * algoType)
+{
+  if (strcmp(algoType, "sort") == 0)  return ALGO_SORT;
+  if (strcmp(algoType, "max") == 0) return ALGO_MAX;
+  
+  printf("Unsupported Algorithm \n" );
+  return -1;
+}

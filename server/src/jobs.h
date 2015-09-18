@@ -11,8 +11,8 @@ typedef client_info Client;
 
 typedef struct Task
 {
-  char basePath[100];
-  Attribute algoType; // ALGO_SORT, ALGO_MAX 
+  char basePath[256];
+  Attribute taskType; // ALGO_SORT, ALGO_MAX 
 }Task;
 
 typedef struct ClientNode
@@ -46,7 +46,7 @@ JobNode* addJob(int jobId, Task *task);
 bool removeJob(int jobId);
 JobNode* getJobNode(int jobId);
 
-bool initJob(int groupId, int jobId, Task *task);
+bool initJob(int groupId, int jobId, int taskType, char *inputFile);
 bool assignJob(JobNode *jobNode, Task *task);
 bool addClientToJob(JobNode* jobNode, Client *client);
 bool freeClient(int jobId, Client *client);

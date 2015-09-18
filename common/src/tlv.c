@@ -7,11 +7,14 @@
 #include "common.h" 
 #include "tlv.h"
 
-#define DEBUG 1
+#define DEBUG 0
 unsigned int g_groups[255];
 
 int encode_string_data(const char *data, const int length, Buffer *buf)
 {
+   if (buf->length == 0)
+    buf->length = 4;
+
    char *curP = buf->payload + buf->length;
    
    if ((length <= 0) || (length >= 1024))
@@ -30,6 +33,8 @@ int encode_string_data(const char *data, const int length, Buffer *buf)
     printf("Encoded Length = %d \n", buf->length);
     printf("%s ...%s\n", __FUNCTION__, buf->payload);
 #endif   
+  TLV_Header *hdr = (TLV_Header *)buf->payload;
+  hdr->len = htonl(buf->length);
  
   return buf->length;
 }
@@ -37,6 +42,9 @@ int encode_string_data(const char *data, const int length, Buffer *buf)
 int encode_join_group(uint32_t *groups, int numgroups , Buffer *buf)
 {
    int i = 0;
+   if (buf->length == 0)
+    buf->length = 4;
+
    char *curP = buf->payload + buf->length;
    
    if ((numgroups <= 0) || (numgroups >= 255))
@@ -60,14 +68,17 @@ int encode_join_group(uint32_t *groups, int numgroups , Buffer *buf)
     printf("Encoded Length = %d \n", buf->length);
     printf("%s ...%s\n", __FUNCTION__, buf->payload);
 #endif
+  TLV_Header *hdr = (TLV_Header *)buf->payload;
+  hdr->len = htonl(buf->length);
   return buf->length;
 }
-
 
 int encode_goodbye(Buffer *buf)
 {
    char data[] = "goodbye";
    int length = strlen(data); 
+   if (buf->length == 0)
+    buf->length = 4;
    char *curP = buf->payload + buf->length;
    
    if ((length <= 0) || (length >= 1024))
@@ -86,12 +97,15 @@ int encode_goodbye(Buffer *buf)
     printf("Encoded Length = %d \n", buf->length);
     printf("%s ...%s\n", __FUNCTION__, buf->payload);
 #endif   
- 
+  TLV_Header *hdr = (TLV_Header *)buf->payload;
+  hdr->len = htonl(buf->length);
   return buf->length;
 }
 
 int encode_algo_sort(const char *path, const int length, Buffer *buf)
 {
+   if (buf->length == 0)
+    buf->length = 4;
    char *curP = buf->payload + buf->length;
    
    if ((length <= 0) || (length >= 1024))
@@ -110,12 +124,16 @@ int encode_algo_sort(const char *path, const int length, Buffer *buf)
     printf("Encoded Length = %d \n", buf->length);
     printf("%s ...%s\n", __FUNCTION__, buf->payload);
 #endif   
+  TLV_Header *hdr = (TLV_Header *)buf->payload;
+  hdr->len = htonl(buf->length);
  
   return buf->length;
 }
 
 int encode_algo_max(const char *data, const int length, Buffer *buf)
 {
+   if (buf->length == 0)
+    buf->length = 4;
    char *curP = buf->payload + buf->length;
    
    if ((length <= 0) || (length >= 1024))
@@ -134,15 +152,38 @@ int encode_algo_max(const char *data, const int length, Buffer *buf)
     printf("Encoded Length = %d \n", buf->length);
     printf("%s ...%s\n", __FUNCTION__, buf->payload);
 #endif   
+  TLV_Header *hdr = (TLV_Header *)buf->payload;
+  hdr->len = htonl(buf->length);
  
   return buf->length;
 }
 
-void encode_tlv_header(TLV_Header *hdr, uint16_t numTlv)
+int encode_algo_error(uint32_t *error, const int length, Buffer *buf)
 {
-  hdr->numTlv = htons(numTlv);
-  printf("hdr->numTlv  =  %d \n", hdr->numTlv);
-  hdr->reserved = htons(0);
+   int i = 0;
+   if (buf->length == 0)
+    buf->length = 4;
+
+   char *curP = buf->payload + buf->length;
+   
+   *(uint16_t *)curP = htons(ALGO_ERROR);
+   *(uint16_t *)(curP + 2) = htons(4*length);
+    curP = curP + 4;
+    buf->length  += 4;
+    for (i = 0; i < length; i++)
+    {
+     *(uint32_t *)curP = htons(error);
+      curP = curP + 4;
+      buf->length  += 4;
+    } 
+
+#if (DEBUG)   
+    printf("Encoded Length = %d \n", buf->length);
+    printf("%s ...%s\n", __FUNCTION__, buf->payload);
+#endif
+  TLV_Header *hdr = (TLV_Header *)buf->payload;
+  hdr->len = htonl(buf->length);
+  return buf->length;
 }
 
 int encode(Attribute attr, const void *data, const int length, Buffer *buf)
@@ -161,6 +202,12 @@ int encode(Attribute attr, const void *data, const int length, Buffer *buf)
    case GOOD_BYE:
     printf("Encoding GOOD_BYE \n");
     return encode_goodbye(buf);
+   case ALGO_SORT:
+    return encode_algo_sort(data, length, buf);
+   case ALGO_MAX:
+    return encode_algo_max(data, length, buf);
+   case ALGO_ERROR:
+    return encode_algo_error((uint32_t*)data, length, buf); 
    default:
     printf("%s : can't Understand the Attribute to be encoded", __FUNCTION__);
     break;
@@ -170,6 +217,8 @@ int encode(Attribute attr, const void *data, const int length, Buffer *buf)
 
 int encode_cli_data(const char *data, const int length, Buffer *buf)
 {
+   if (buf->length == 0)
+    buf->length = 4;
    char *curP = buf->payload + buf->length;
    
    if ((length <= 0) || (length >= 1024))
@@ -188,15 +237,20 @@ int encode_cli_data(const char *data, const int length, Buffer *buf)
     printf("Encoded Length = %d \n", buf->length);
     printf("%s ...%s\n", __FUNCTION__, buf->payload);
 #endif   
+  TLV_Header *hdr = (TLV_Header *)buf->payload;
+  hdr->len = htonl(buf->length);
  
   return buf->length;
 }
 
-Tlv_element decode(char *buffer, unsigned int buflen)
+Tlv decode(char *buffer, unsigned int buflen)
 {
   printf("Buflen = %d %s \n", buflen, buffer);
   int i = 0;
-  Tlv_element  tlv;
+  Tlv tlv;
+  //printf("Packet says : %d \n", ntohl(*(uint32_t *)buffer));
+  buffer = buffer + 4;
+  buflen = buflen - 4;
   
   tlv.type = htons(*(uint16_t*)buffer);
   tlv.length = htons(*(uint16_t *)(buffer + 2));
@@ -228,13 +282,18 @@ Tlv_element decode(char *buffer, unsigned int buflen)
     case GOOD_BYE:
      tlv.value = buffer; 
      break;
+    case ALGO_SORT:
+     tlv.value = buffer;
+    case ALGO_MAX:
+     tlv.value = buffer;
+    case ALGO_ERROR:
+     tlv.value = buffer;
     default:
      printf(" %s Can't Decode %d ! ", __FUNCTION__,htons(*(uint16_t*)buffer) ); 
      break;   
   }
    return tlv;
 }
-
 
 
 

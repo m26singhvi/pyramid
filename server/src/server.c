@@ -14,6 +14,7 @@
 #include "tlv.h"
 #include "server_helper.h"
 #include "logging.h"
+#include "jobs.h"
 
 extern unsigned int g_groups[255];
 
@@ -182,6 +183,7 @@ int main (int argc, char* argv[]) {
     if(server_tid != -1 && make_socket_non_blocking(server_tid) != -1){
         printf("Server started at port : %d\n", server_port);
         /* Listen for new connections */
+        initializeJobDll();
         init_and_listen_epoll_events(server_tid);
 
         /* Waiting for all threads to complete */
@@ -230,7 +232,7 @@ void  receive_data (int client_fd)
         }
 
         printf("Got some data on an existing fd %d\n",client_fd);
-        Tlv_element tlv = decode(buf, count);
+        Tlv tlv = decode(buf, count);
         handle_data(client_fd, tlv);
         /* Write the buffer to standard output */
         /*int s = write (1, tlv.value, tlv.length);
@@ -254,8 +256,8 @@ void  receive_data (int client_fd)
 }
 
 
-void handle_data(int client_fd, Tlv_element tlv)
-{ 
+void handle_data(int client_fd, Tlv tlv)
+{
    client_info_head *cih = server_get_client_info_head(client_fd);
    switch(tlv.type)
    {
@@ -273,6 +275,7 @@ void handle_data(int client_fd, Tlv_element tlv)
     }
     printf(" All groups joined \n"); 
     break;    
+
     case STRING_DATA:
     {
      printf("Message Received : \n %s", tlv.value); 
@@ -282,7 +285,9 @@ void handle_data(int client_fd, Tlv_element tlv)
     case CLI_DATA:
 	sh_parse_cmd(client_fd, tlv.value, tlv.length);
 	break;
-	
+    case ALGO_ERROR:
+         printf("This client %d couldn't do the job\n", client_fd);
+         break;
     default : 
      printf("%s : unknown Attribute, can't handle ", __func__); 
     break;

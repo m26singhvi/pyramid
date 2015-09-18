@@ -1,15 +1,12 @@
 #include "api.h"
 #include<assert.h>
+#include<stdio.h>
 
 int main()
 {
-    int v[] = {1,3,344,5,67};
-    int_vector_t in;
-    in.vector = v;
-    in.len = 5;
-    int max = 0;
-    assert(main_api(&in, &max,FIND_MAX) == API_SUCCESS);
-    assert(max == 344);
+    char *in = "test_data.txt";
+    char *max = "test_data_op.txt";
+    assert(main_api(in, max,FIND_MAX) == API_SUCCESS);
     return 0;
 }
         

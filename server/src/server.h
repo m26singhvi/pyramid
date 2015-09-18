@@ -7,7 +7,7 @@
 
 void* server (void *);
 void receive_data (int );
-void handle_data(int, Tlv_element);
+void handle_data(int, Tlv);
 void *cli_request_handler(void*);
 
 #endif /* __SERVER_H__ */
