@@ -19,7 +19,7 @@ LIBSOURCES := $(wildcard $(COMMONDIR)/*.c)
 rm       = rm -f
 
 # compiling flags here
-CFLAGS   = -std=c99 -Wall -Werror -Wextra -O2 
+CFLAGS   = -std=c99 -Wall -Werror -Wextra -O2 -g
 
 $(BINDIR)/$(TARGET): $(OBJECTS)
 	@mkdir -p bin/

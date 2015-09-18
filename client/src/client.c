@@ -2,6 +2,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <errno.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -14,7 +15,8 @@
 
 extern int inet_aton(const char *cp, struct in_addr *inp);
 
-static void send_data(int fd);
+void receive_exec_request (int server_fd);
+static void send_data(int fd, char *buffer, int ALGO);
 static void send_joining_groups(int fd, uint32_t *groups, int numgroups);
 
 enum client_error_msgs {
@@ -175,14 +177,98 @@ main (int argc, char* argv[])
            numgroups = numgroups + 1;
         }
         send_joining_groups (client_s_fd, groups, numgroups);
-      
+        printf("\nWaiting for task from server"); 
         // Take user input and send it to server
-        send_data(client_s_fd);
+        //send_data(client_s_fd);
+        
+	//Receive task from user and send back result
+	receive_exec_request(client_s_fd);
+        printf("\nDone Request");
     }	
     client_close_fd(client_s_fd);
 
     return 0;
 }
+
+static void 
+handle_exec_data(int server_fd, Tlv tlv)
+{
+   switch(tlv.type)
+   {
+        case ALGO_MAX:
+	{
+	    send_data(server_fd, "\nMAX Request received at client.\n", ALGO_MAX);
+	    printf("\nRequest Recevied to find max in a file\n");
+	    break;
+	}
+        case ALGO_SORT:
+	{
+	    printf("\nRequest Received to sort a File\n");
+	    break;
+	}
+        default :
+     	   printf("%s : unknown Attribute, can't handle ", __func__);
+        break;
+   }
+}
+
+
+/*
+ * receive_data ()
+ *
+ */
+void  
+receive_exec_request (int server_fd)
+{
+    printf("\nReceive data from fd %d\n", server_fd);
+    int done = 0;
+
+    while (1)
+    {
+        ssize_t count;
+        char buf[ONE_KB];
+        int flags = 0;
+
+        count = recv(server_fd, buf, sizeof buf, flags);
+        buf[count] = '\0';
+        if (count == -1)
+        {
+            /* If errno == EAGAIN, that means we have read all
+             * data. So go back to the main loop. */
+            if (errno != EAGAIN)
+            {
+                perror ("read");
+                done = 1;
+            }
+            break;
+        }
+        else if (count == 0)
+        {
+            /* End of file. The remote has closed the
+             * connection. */
+            done = 1;
+            break;
+        }
+        printf("Got some data on an existing fd %d\n",server_fd);
+        Tlv tlv = decode(buf, count);
+        handle_exec_data(server_fd, tlv);
+        /* Write the buffer to standard output */
+        /*int s = write (1, tlv.value, tlv.length);
+        printf("\nA.");
+        if (s == -1)
+        {
+            perror ("write");
+            abort ();
+        }*/
+    }
+
+    if (done)
+    {
+        printf("No data on descriptor %d\n", server_fd);
+
+    }
+}
+
 
 /*
  * send_data ()
@@ -190,11 +276,8 @@ main (int argc, char* argv[])
  * This is a temp func for testing.
  */
 static void
-send_data (int fd)
+send_data (int fd, char *buffer, int ALGO)
 {
-    char buffer[ONE_KB];
-
-    while (fgets(buffer, sizeof(buffer), stdin) != NULL) {
 	int len = strlen(buffer);
 	int sent = 0;
 	while (len > 0) {
@@ -203,14 +286,13 @@ send_data (int fd)
             memset(payload, 0, 1024);
             buf.payload = payload;
             buf.length = 0;
-            int encoded_len = encode(STRING_DATA, (void *)buffer , len, &buf);
+            int encoded_len = encode(ALGO, (void *)buffer , len, &buf);
 	    if ((sent = send(fd, payload, encoded_len, 0)) == -1) {
 		report_error_and_terminate("Failed to send data");
 	    } else {
 		len -= sent;
 	    }
 	}
-    }
 }
 
 /*
