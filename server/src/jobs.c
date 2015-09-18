@@ -30,16 +30,15 @@ bool initJob(int groupId, int jobId, int taskType, char *inputFile)
   client_group *cg = cgh->h;
   while(cg)
   {
-	printf("cg=%p, cgh->tc=%d, cg->ci=%p, cg->p=%p, cg->n=%p\n", cg, cgh->tc, cg->ci, cg->p, cg->n);
+//	printf("cg=%p, cgh->tc=%d, cg->ci=%p, cg->p=%p, cg->n=%p\n", cg, cgh->tc, cg->ci, cg->p, cg->n);
 	if (cg->ci->busy == FALSE) {
  	    addClientToJob(jobNode, cg->ci);
 	    cg->ci->busy = TRUE;
 	    numClient++;
-            printf("I am client \n");
 	}
 	cg = cg->n;
   }
-  printf("Number of Clients : %d\n", numClient);
+ // printf("Number of Clients : %d\n", numClient);
   if (numClient == 0)
   {
     //delete the job here , remove from dll
@@ -98,15 +97,13 @@ bool freeClient(int jobId, Client *client)
 bool assignJob(JobNode *jobNode, Task *task)
 {
   ClientNode *current = jobNode->job.head->next;
-  printf(" Task = %d \n", task->taskType);
   while(current)
   {
-    printf("\n--------------------");  
+    printf("\n============================================");  
    //add the index based on spliting here onto basePath
    sh_send_encoded_data(current->client->cfd, task->basePath, task->taskType);
    current = current->next;
   }
-//  sh_send_encoded_data(5, task->basePath, 102);
   printf("\nSent to all clients");
   return true;
 }  
