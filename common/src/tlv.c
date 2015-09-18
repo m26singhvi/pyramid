@@ -172,7 +172,7 @@ int encode_algo_error(uint32_t *error, const int length, Buffer *buf)
     buf->length  += 4;
     for (i = 0; i < length; i++)
     {
-     *(uint32_t *)curP = htons(error);
+     *(uint32_t *)curP = htonl(*error);
       curP = curP + 4;
       buf->length  += 4;
     } 
