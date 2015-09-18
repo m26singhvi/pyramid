@@ -16,7 +16,7 @@
 extern int inet_aton(const char *cp, struct in_addr *inp);
 
 void receive_exec_request (int server_fd);
-static void send_data(int fd, char *buffer);
+static void send_data(int fd, char *buffer, int ALGO);
 static void send_joining_groups(int fd, uint32_t *groups, int numgroups);
 
 enum client_error_msgs {
