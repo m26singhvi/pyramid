@@ -60,9 +60,11 @@ bool initJob(int groupId, int jobId, int taskType, char *inputFile)
 bool addClientToJob(JobNode *jobNode, Client *client)
 {
    ClientNode *node = (ClientNode *)malloc(sizeof(ClientNode));
+   printf("Node = %p\n", node); 
    node->client = client;
    node->next = NULL;
    node->prev = jobNode->job.tail;
+   jobNode->job.tail->next = node;
    jobNode->job.tail= node;
 // take care of head here 
    return true;
