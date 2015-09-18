@@ -88,14 +88,15 @@ sh_display_all_multicast_groups (int cfd)
 static void
 sh_display_all_clients (int cfd)
 {
-//    printf("\nDisplaying all clients");
     client_info *ci;
+    client_info_head *cih;
     char storage_buffer[ONE_KB];
     char format_buffer[ONE_KB];
     int tc = 0;
     int c = 0;
+    uint i = 0;
 
-    FOR_ALL_CLIENT_FDS (ci, server_get_client_info_head(cfd)) {
+    FOR_ALL_CLIENT_FDS (ci, cih, i) {
 	c = snprintf(format_buffer, ONE_KB, "%d ", ci->cfd);
 	tc = sh_try_to_send_data(cfd, storage_buffer, format_buffer, tc, c,
 					CLI_DATA);

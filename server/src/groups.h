@@ -37,6 +37,8 @@ struct client_info {
     enum boolean busy; // client's status
 };
 
+extern client_info_head client_hash_map[];
+
 extern uint server_get_max_multicast_groups(void);
 extern client_group_head * server_get_client_groups_head(void);
 extern client_group_head * server_get_client_gid_head(uint gid);
@@ -44,12 +46,20 @@ extern client_info_head * server_get_client_info_head(int);
 extern client_info * server_search_client_fd(client_info_head *cih, int cfd);
 extern enum boolean server_add_one_client_fd(client_info_head *cih, int cfd, struct sockaddr_in * const sa, uint gids[], uint n_gids);
 extern enum boolean server_del_one_client_fd(client_info_head *cih, int cfd);
+extern uint server_get_max_hashmap_size(void);
 
-#define MAX_MULTICAST_GROUPS 1000
-#define MAX_CLIENTS_PER_MULTICAST_GROUP 255
-#define MAX_HASHMAP_SIZE 255
+#define DEFAULT_MAX_MULTICAST_GROUPS 1000
+#define DEFAULT_MAX_CLIENTS_PER_MULTICAST_GROUP 255
+#define DEFAULT_MAX_HASHMAP_SIZE 255
 
-#define FOR_ALL_CLIENT_FDS(p, head) \
+#define FOR_ALL_CLIENT_FDS(p, head, i) 					\
+		for ((i) = 0;						\
+		     ((head) = (i) < server_get_max_hashmap_size() ?	\
+		     &client_hash_map[i] : NULL);			\
+		     (i)++)						\
+		for ((p) = (head)->h; (p); (p) = (p)->r)
+
+#define FOR_ALL_CLIENT_FDS_IN_HASHMAP_ENTRY(p, head) 			\
 		for ((p) = (head)->h; (p); (p) = (p)->r)
 
 #define FOR_ALL_MULTICAST_GROUPS(i) \
