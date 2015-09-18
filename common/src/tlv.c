@@ -284,10 +284,13 @@ Tlv decode(char *buffer, unsigned int buflen)
      break;
     case ALGO_SORT:
      tlv.value = buffer;
+     break;
     case ALGO_MAX:
      tlv.value = buffer;
+     break;
     case ALGO_ERROR:
      tlv.value = buffer;
+     break;
     default:
      printf(" %s Can't Decode %d ! ", __FUNCTION__,htons(*(uint16_t*)buffer) ); 
      break;   
