@@ -256,13 +256,13 @@ sh_parse_cmd (int cfd, char *buff)
         initJob(group, sh_job_id, task, input_file);
 	break;
     case LOGGING_LEVEL_ERROR:
-        logging.level = ERROR;
+        //logging.level = ERROR;
         break;
     case LOGGING_LEVEL_INFO:
-        logging.level = INFO;
+        //logging.level = INFO;
         break;
     case LOGGING_LEVEL_DEBUG:
-        logging.level = DEBUG;
+        //logging.level = DEBUG;
         break;
     default:
 	printf("Invalid Opcode %d\n", opcode);
