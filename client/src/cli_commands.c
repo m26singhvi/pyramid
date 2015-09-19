@@ -40,31 +40,31 @@ static int make_socket_non_blocking (int sfd)
 
 unsigned int handle_data(Tlv tlv)
 {
-   printf("\nHandle_data");
+//   printf("\nHandle_data");
    switch(tlv.type) {
    case CLI_DATA:
    {
-       printf("\n[%s]", tlv.value);
+       printf("\n %s", tlv.value);
        return 0;
    }
    case ALGO_MAX:
    {
-	printf("\n%s", tlv.value);
+	printf("\n %s", tlv.value);
 	return 0;
    }
    case ALGO_SORT:
    {
-	printf("\n[%s]", tlv.value);
+	printf("\n %s", tlv.value);
 	return 0;
    }
    case GOOD_BYE:
    {
-       printf("\n-----*****----- \n");
+       printf("\n---------- \n");
        return 1;
    } 
    default :
    {
-       printf("%s : unknown Attribute, can't handle ", __func__);
+       printf("\n%s : unknown Attribute, can't handle ", __func__);
        return -1;
    }
    }
@@ -73,7 +73,7 @@ unsigned int handle_data(Tlv tlv)
 
 void  receive_data ()
 {
-    printf("\nReceive CLI data");
+ //   printf("\nReceive CLI data");
     unsigned int done = 0;
 
     while (1)
@@ -104,7 +104,7 @@ void  receive_data ()
         }
 
 	if (count > 0) {
-            printf("Got some data on an existing fd %d\n",cli_fd);
+ //           printf("Got some data on an existing fd %d\n",cli_fd);
             Tlv tlv = decode(buf, count);
             done = handle_data(tlv);
             if (done == 1)
@@ -236,6 +236,7 @@ void cli_help(void) {
 		
 	 printf("\n Execute Commands:");
 		printf("\n\texecute <TASK> <file_name> <multicast_group_id>");
+	printf("\n");
 }
 
 void cli_print_multicast_groups(void) {
@@ -243,7 +244,7 @@ void cli_print_multicast_groups(void) {
     memset(buffer, 0, sizeof buffer);
     sprintf(buffer, "%d", SHOW_MULTICAST_GROUPS);
 
-    printf("\nAvailable Multicast groups list:\n");
+    printf("\nAvailable Multicast groups list:");
     request_cli_data(buffer);
     receive_data();
 }
@@ -382,8 +383,12 @@ void cli_main(int fd){
    
     cli_fd = fd;
     make_socket_non_blocking(fd);
+
     if(!init_cli_interface) {
-    	printf("\n ************ Pyramid CLI Interface *************\n\n");
+	if(system("clear") == -1){}
+ 	printf("\n**************************************************************************************************************");
+    	printf("\n************************************* Pyramid CLI Interface **************************************************");
+        printf("\n**************************************************************************************************************\n\n");
         init_cli_interface = true;
     }
 

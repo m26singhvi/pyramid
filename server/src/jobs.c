@@ -23,7 +23,7 @@ bool initJob(int groupId, int jobId, int taskType, char *inputFile)
   JobNode *jobNode = addJob(jobId, task);
   if (jobNode == NULL)
   {
-    printf("Job Id  %d could not be added", jobId);
+    printf("\nJob Id  %d could not be added", jobId);
     return false;
   }
   unsigned int numClient = 0;
@@ -43,7 +43,7 @@ bool initJob(int groupId, int jobId, int taskType, char *inputFile)
   if (numClient == 0)
   {
     //delete the job here , remove from dll
-    printf("Cannot execute the task now");
+    printf("\nCannot execute the task now");
     return false;
   }
   
@@ -63,7 +63,7 @@ bool initJob(int groupId, int jobId, int taskType, char *inputFile)
 bool addClientToJob(JobNode *jobNode, Client *client)
 {
    ClientNode *node = (ClientNode *)malloc(sizeof(ClientNode));
-   printf("Node = %p\n", node); 
+//   printf("Node = %p\n", node); 
    node->client = client;
    node->next = NULL;
    node->prev = jobNode->job.tail;
@@ -88,7 +88,7 @@ bool freeClient(int jobId, Client *client)
     current = current->next;
 
   if (current == NULL)
-   printf("Client is not in the list");
+   printf("\nClient is not in the list");
   else
    {
     current->prev->next = current->next;
@@ -103,7 +103,7 @@ bool assignJob(JobNode *jobNode, Task *task)
   ClientNode *current = jobNode->job.head->next;
   while(current)
   {
-    printf("\n============================================");  
+ //   printf("\n============================================");  
    //add the index based on spliting here onto basePath
    sh_send_encoded_data(current->client->cfd, task->basePath, task->taskType);
    current = current->next;
@@ -126,7 +126,7 @@ bool initializeJobDll()
 
 JobNode* addJob(int jobId, Task *task)
 {
-  printf(" %s : Job Id = %d\n ", __func__, jobId);
+  printf("\n %s : Job Id = %d\n ", __func__, jobId);
 
   JobNode *new = (JobNode *)malloc(sizeof(JobNode));
   new->next = NULL;
@@ -145,12 +145,12 @@ JobNode* addJob(int jobId, Task *task)
 
 bool removeJob( int jobId)
 {
-  printf("%s  Job Id = %d \n",__func__ , jobId);
+  printf("\n%sRemoving : Job Id = %d \n",__func__ , jobId);
   JobNode *jobNode = getJobNode(jobId);
   
   if (jobNode == NULL)
   {
-   printf("No such job present\n");
+   printf("\nNo such job present\n");
    return false;
   }
   else if((jobNode->job.head == NULL)&&(jobNode->job.tail == NULL))
@@ -161,7 +161,7 @@ bool removeJob( int jobId)
   }
   else
   {
-   printf("Can't delete the job,first free clients from job");
+   printf("\nCan't delete the job,first free clients from job");
    return false;
   }
 
@@ -170,7 +170,7 @@ bool removeJob( int jobId)
 
 JobNode *getJobNode(int jobId)
 {
-  printf("Job Id = %d \n", jobId);
+ // printf("Job Id = %d \n", jobId);
   JobNode *jobNode = pHead->next;
   while((jobNode)&&(jobNode->job.id != jobId))
    jobNode = jobNode->next;

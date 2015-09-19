@@ -14,6 +14,18 @@ void cli_print_multicast_groups(void);
 
 void cli_print_multicast_group_clients(int);
 
+void cli_print_clients(void);
+
+void cli_print_job_details(long long int);
+
+void cli_print_job_result(long long int);
+
+void cli_set_repository_address(char *);
+
+void cli_set_job_result_queue_size(int);
+
+void cli_exec_task(int, char *, int);
+
 void cli_logging_level(int);
 
 void parse_cli(char *cli_string);

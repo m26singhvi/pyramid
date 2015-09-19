@@ -11,7 +11,7 @@ int db_server_divide(char *path, unsigned int job_id, unsigned int n)
 {
    if (n == 0) 
    {
-     printf("Number of parts = 0 ");
+     printf("\nNo available clients to process the data!!!");
      return FAILURE;
    }
    char buf[20];
@@ -19,20 +19,20 @@ int db_server_divide(char *path, unsigned int job_id, unsigned int n)
    unsigned int count = 0;
    FILE *fp = fopen(path, "r+");
    if(fp == NULL){
-     printf("\nInvalid file path");
+     printf("\nInvalid file path entered by user!!!");
      return FAILURE;
    }
    while(fgets(buf, 20, fp))
    {
       count++;  
    }
-   printf("Number of Parts : %d\n", n);
+//   printf("Number of Parts : %d\n", n);
    if((count%n) == 0){
        count = count / n;
    } else {
      count = count/n +1;
    }
-   printf("%u",count);
+ //  printf("%u",count);
    sprintf(buf,"%d", count);
    strcat(split, buf);
    strcat(split, " ");
@@ -41,19 +41,21 @@ int db_server_divide(char *path, unsigned int job_id, unsigned int n)
    sprintf(buf,"%d", job_id);
    strcat(split, buf);
    strcat(split, "_"); 
-   printf("FINAL = %s",split);
+ //  printf("FINAL = %s",split);
    if (system(split) == 0)
    {
-    printf("Split Successful \n");
+ //   printf("Split Successful \n");
    } else{
      return FAILURE;
    }
    fclose(fp);
    return SUCCESS;
 }
-
+/*
 int test()
 {
    db_server_divide("/home/praveen/syspgm/test_split", 1, 11);
    return 0;
 }
+
+*/

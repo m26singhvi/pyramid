@@ -23,6 +23,8 @@ sh_send_encoded_data (int fd, char *data, Attribute type)
 {
     int len = strlen(data);
 
+
+//    printf("\nSend_encoded_data");
      while (len > 0) {
  	Buffer buf;
 	char payload[1024];
@@ -34,14 +36,14 @@ sh_send_encoded_data (int fd, char *data, Attribute type)
 	int encoded_len = encode(type, (void *) data, len, &buf);
 	int sent = 0;
 
-        printf("\n Send Data : fd : %d, payload %s, encoded_len %d, type %d", fd, payload, encoded_len, type);
+ //       printf("\n Send Data : fd : %d, payload %s, encoded_len %d, type %d", fd, payload, encoded_len, type);
 	if ((sent = send(fd, payload, encoded_len, 0)) == -1) {
 	    report_error_and_terminate("Failed to send data");
 	} else {
 	    len -= sent;
 	}
     }
-    printf("\nSent Type : %d", type);
+//    printf("\nSent Type : %d", type);
 }
 
 int
@@ -71,8 +73,9 @@ sh_display_all_multicast_groups (int cfd)
     FOR_ALL_MULTICAST_GROUPS(at) {
 	FOR_ALL_GROUP_IDS(cg, mg[at].h) {
 	    c = snprintf(format_buffer, ONE_KB,
-				"gid %u:\ncfd = %d, cip = %0x, cp = %0x\n",
-				cg->gid, cg->ci->cfd, cg->ci->cip, cg->ci->cp);
+//				"gid %u:\ncfd = %d, cip = %0x, cp = %0x\n",
+//				cg->gid, cg->ci->cfd, cg->ci->cip, cg->ci->cp);
+				"\ngid %u : %d ", cg->gid, cg->ci->cfd);
 	    tc = sh_try_to_send_data(cfd, storage_buffer, format_buffer, tc, c,
 					CLI_DATA);
 	}
@@ -122,7 +125,7 @@ sh_display_job_details(int cfd, long long int job_id)
     }
 
 
-    printf("\nJob Details for Job: %lld, cdf %d\n", job_id, cfd);
+//    printf("\nJob Details for Job: %lld, cdf %d\n", job_id, cfd);
 }
 
 void
@@ -142,7 +145,7 @@ sh_display_job_results(int cfd, long long int job_id)
     }
 
 
-    printf("\nJob Result for Job: %lld, cfd %d\n", job_id, cfd);
+//    printf("\nJob Result for Job: %lld, cfd %d\n", job_id, cfd);
 }
 
 void
@@ -152,15 +155,15 @@ sh_allocate_job_id()
 }
 
 void
-sh_send_job_result_to_cli(int client_fd, char *data)
+sh_send_job_result_to_cli(int client_fd, Tlv tlv)
 {
     char storage_buffer[ONE_KB];
     char format_buffer[ONE_KB];
     int tc = 0;
     int c = 0;
 
-    printf("\nResult : %s", data);
-    c = snprintf(format_buffer, ONE_KB, "[%s]", data);
+//    printf("\nReady to send job Result to cli: %s at fd %d, tlv.type %d", tlv.value, client_fd, tlv.type);
+    c = snprintf(format_buffer, ONE_KB, "[%s]", tlv.value);
     tc = sh_try_to_send_data(client_fd, storage_buffer, format_buffer, tc, c,
                                         CLI_DATA);
 
@@ -169,7 +172,7 @@ sh_send_job_result_to_cli(int client_fd, char *data)
     }
 
 //    sh_send_encoded_data(client_fd, data, CLI_DATA);
-    printf("\nJob result sent to CLI");
+//    printf("\nJob result sent to CLI");
 }
 
 
@@ -190,7 +193,7 @@ sh_execute_job(int cfd, long long int job_id, int task, int multicast_groupid, c
     }
 
 
-    printf("\nExecute Job: %lld, cfd %d, task %d, group %d, file %s \n", job_id, cfd, task, multicast_groupid, file);  
+//    printf("\nExecute Job: %lld, cfd %d, task %d, group %d, file %s \n", job_id, cfd, task, multicast_groupid, file);  
 }
 
 void
@@ -287,11 +290,12 @@ sh_parse_cmd (int cfd, char *buff)
         //logging.level = DEBUG;
         break;
     default:
-	printf("Invalid Opcode %d\n", opcode);
+	printf("\nInvalid Opcode %d\n", opcode);
 	break;
     }
 
     sleep(1);
+//    printf("\nSending GoodBye");
     sh_send_encoded_data(cfd, buf, GOOD_BYE);
 
 }
