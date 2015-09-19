@@ -35,6 +35,7 @@ typedef struct Job
 typedef struct jobNode
 {
   Job job;
+  int numClients;
   struct jobNode *prev;
   struct jobNode *next;
 }JobNode;
