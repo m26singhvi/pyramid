@@ -6,20 +6,20 @@
 #include "groups.h"
 #include "common.h"
 
-uint max_multicast_groups = MAX_MULTICAST_GROUPS;
-uint max_clients_per_multicast_group = MAX_CLIENTS_PER_MULTICAST_GROUP;
+uint max_multicast_groups = DEFAULT_MAX_MULTICAST_GROUPS;
+uint max_clients_per_multicast_group = DEFAULT_MAX_CLIENTS_PER_MULTICAST_GROUP;
+uint max_hashmap_size = DEFAULT_MAX_HASHMAP_SIZE;
 
 /*
  * This is a client multicast group array
  */
-client_group_head multicast_groups[MAX_MULTICAST_GROUPS];
-
-client_info_head client_hash_map[MAX_HASHMAP_SIZE];
+client_group_head *multicast_groups;
 
 /*
- * This is the header to the all the client information list
+ * This is the client hashmap
  */
-client_info_head ci_list_head;
+client_info_head *client_hash_map;
+//client_info_head ci_list_head;
 
 uint
 server_get_max_multicast_groups (void)
@@ -39,6 +39,12 @@ server_is_multicast_group_valid (uint gid)
     return (1 <= gid) && (gid <= server_get_max_multicast_groups());
 }
 
+inline uint
+server_get_max_hashmap_size (void)
+{
+    return max_hashmap_size;
+}
+
 client_group_head *
 server_get_client_groups_head (void)
 {
@@ -55,16 +61,16 @@ server_get_client_gid_head (uint gid)
     }
 }
 
-int
+static inline uint
 get_hash (int cfd)
 {
-    return cfd % 255;
+    return cfd % server_get_max_hashmap_size();
 }
 
 client_info_head *
 server_get_client_info_head (int cfd)
 {
-    int hash = get_hash(cfd);
+    uint hash = get_hash(cfd);
     return &client_hash_map[hash];
     /* return &ci_list_head; */
 }
@@ -74,7 +80,7 @@ client_info *
 server_search_client_fd (client_info_head *cih, int cfd)
 {
     client_info *ci;
-    FOR_ALL_CLIENT_FDS(ci, cih) {
+    FOR_ALL_CLIENT_FDS_IN_HASHMAP_ENTRY (ci, cih) {
 	if (cfd == ci->cfd) {
 	    return ci;
 	}

@@ -86,14 +86,15 @@ sh_display_all_multicast_groups (int cfd)
 static void
 sh_display_all_clients (int cfd)
 {
-//    printf("\nDisplaying all clients");
     client_info *ci;
+    client_info_head *cih;
     char storage_buffer[ONE_KB];
     char format_buffer[ONE_KB];
     int tc = 0;
     int c = 0;
+    uint i = 0;
 
-    FOR_ALL_CLIENT_FDS (ci, server_get_client_info_head(cfd)) {
+    FOR_ALL_CLIENT_FDS (ci, cih, i) {
 	c = snprintf(format_buffer, ONE_KB, "%d ", ci->cfd);
 	tc = sh_try_to_send_data(cfd, storage_buffer, format_buffer, tc, c,
 					CLI_DATA);
@@ -277,13 +278,13 @@ sh_parse_cmd (int cfd, char *buff)
         initJob(group, sh_job_id, task, input_file);
 	break;
     case LOGGING_LEVEL_ERROR:
-        logging.level = ERROR;
+        //logging.level = ERROR;
         break;
     case LOGGING_LEVEL_INFO:
-        logging.level = INFO;
+        //logging.level = INFO;
         break;
     case LOGGING_LEVEL_DEBUG:
-        logging.level = DEBUG;
+        //logging.level = DEBUG;
         break;
     default:
 	printf("Invalid Opcode %d\n", opcode);

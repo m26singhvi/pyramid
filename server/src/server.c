@@ -9,12 +9,14 @@
 #include <sys/epoll.h>
 #include <errno.h>
 #include "server.h"
+
 #include "common.h" 
 #include "groups.h"
 #include "tlv.h"
 #include "server_helper.h"
 #include "logging.h"
 #include "jobs.h"
+#include "dbg_server.h"
 
 extern unsigned int g_groups[255];
 
@@ -168,6 +170,28 @@ static int validate_port_number(char *port){
     return server_port;
 }
 
+static enum boolean
+server_alloc_memory (void)
+{
+    uint mmg = server_get_max_multicast_groups() * sizeof(client_group_head);
+    uint mhs = server_get_max_hashmap_size() * sizeof(client_info_head);
+
+    dbg_server_memory("max_multicast_groups = %u, max_hashmap_size = %u\n",
+		      mmg, mhs);
+
+    multicast_groups = (client_group_head *) calloc(1, mmg);
+    if (multicast_groups == NULL) {
+	return FALSE;
+    }
+
+    client_hash_map = (client_info_head *) calloc(1, mhs);
+    if (multicast_groups == NULL) {
+	return FALSE;
+    }
+
+    return TRUE;
+}
+
 int main (int argc, char* argv[]) {
     int server_port ;
     /*Validate and convert input port */
@@ -177,6 +201,11 @@ int main (int argc, char* argv[]) {
         fflush(stdout);
         server_port = 51729;
     }
+
+    if (server_alloc_memory() == FALSE) {
+	print_error_and_terminate("Unable to allocate memory");
+    }
+
     /* Ininitialize server socket */
     int server_tid = init_server_socket(server_port);
 
