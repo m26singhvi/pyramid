@@ -33,11 +33,10 @@ db_server_divide (char *path,
    if (system(sshcmd) == 0)
    {
 	printf("Split Successful \n");
+	return SUCCESS;
    } else {
 	return FAILURE;
    }
-
-   return SUCCESS;
 }
 
 const char *

@@ -26,7 +26,9 @@ typedef struct ClientNode
 typedef struct Job
 {
   int id;
+  /* need to merge the below 2 results */
   long long result;
+  char result_path[256];
   Task *task;
   ClientNode *head;
   ClientNode *tail;

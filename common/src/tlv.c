@@ -191,16 +191,16 @@ int encode(Attribute attr, const void *data, const int length, Buffer *buf)
   switch(attr)
   {
    case JOIN_GROUP:
-    printf("Encoding JOIN_GROUP\n");
+//    printf("Encoding JOIN_GROUP\n");
     return encode_join_group((uint32_t*)data, length, buf);
    case STRING_DATA:
-    printf("Encoding STRING_DATA \n");
+//    printf("Encoding STRING_DATA \n");
     return encode_string_data(data, length, buf);
    case CLI_DATA:
-    printf("Encoding CLI_DATA \n");
+//    printf("Encoding CLI_DATA \n");
     return encode_cli_data(data, length, buf);
    case GOOD_BYE:
-    printf("Encoding GOOD_BYE \n");
+//    printf("Encoding GOOD_BYE \n");
     return encode_goodbye(buf);
    case ALGO_SORT:
     return encode_algo_sort(data, length, buf);
@@ -245,7 +245,7 @@ int encode_cli_data(const char *data, const int length, Buffer *buf)
 
 Tlv decode(char *buffer, unsigned int buflen)
 {
-  printf("Buflen = %d %s \n", buflen, buffer);
+ // printf("Buflen = %d %s \n", buflen, buffer);
   int i = 0;
   Tlv tlv;
   //printf("Packet says : %d \n", ntohl(*(uint32_t *)buffer));
@@ -267,12 +267,13 @@ Tlv decode(char *buffer, unsigned int buflen)
     case JOIN_GROUP:
     {
      tlv.length = tlv.length/4;
-     printf("Num Groups = %d \n", tlv.length);
+//     printf("Num Groups = %d \n", tlv.length);
+     printf("\nNew client got added in groups : ");
      for (i = 0 ; i < tlv.length ; i++)
      {
        g_groups[i] = htons(*(uint32_t *)buffer);
        buffer = buffer + 4;
-       printf(" Joining Group : %d \n", g_groups[i]);
+       printf(" %d ", g_groups[i]);
      }
     }
     break;
@@ -292,7 +293,7 @@ Tlv decode(char *buffer, unsigned int buflen)
      tlv.value = buffer;
      break;
     default:
-     printf(" %s Can't Decode %d ! ", __FUNCTION__,htons(*(uint16_t*)buffer) ); 
+     printf("\n %s Can't Decode %d ! ", __FUNCTION__,htons(*(uint16_t*)buffer) ); 
      break;   
   }
    return tlv;

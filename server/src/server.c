@@ -19,6 +19,8 @@
 #include "dbg_server.h"
 
 extern unsigned int g_groups[255];
+int fd_cli;
+
 
 #define MAX_EVENTS 2500 * 4
 
@@ -69,7 +71,7 @@ static int init_server_socket(int server_p)
 }
 static void handle_new_client_connections(struct epoll_event ev, int epollfd, int server_fd)
 {
-    printf("\nHandle New Client Connection");
+    printf("\nReceived a new client connection request");
     while(1){
         struct sockaddr in_addr;
         socklen_t in_len;
@@ -90,7 +92,7 @@ static void handle_new_client_connections(struct epoll_event ev, int epollfd, in
                 break;
             }
         }
-        printf("New client started %d\n",conn_sock);
+        printf("\nNew client %d connected.", conn_sock);
         if(make_socket_non_blocking(conn_sock) == -1) {
             break;
         }
@@ -135,7 +137,7 @@ static void init_and_listen_epoll_events(int server_fd)
     while(1){
         /*Wait for new epoll event*/
         int nfds = epoll_wait(epollfd, events, MAX_EVENTS, -1);
-        printf("Got some events nfds %d\n",nfds);
+ //       printf("Got some events nfds %d\n",nfds);
         if (nfds == -1) {
             perror("epoll_wait");
             return;
@@ -175,10 +177,10 @@ server_alloc_memory (void)
 {
     uint mmg = server_get_max_multicast_groups() * sizeof(client_group_head);
     uint mhs = server_get_max_hashmap_size() * sizeof(client_info_head);
-
+/*
     dbg_server_memory("max_multicast_groups = %u, max_hashmap_size = %u\n",
 		      mmg, mhs);
-
+*/
     multicast_groups = (client_group_head *) calloc(1, mmg);
     if (multicast_groups == NULL) {
 	return FALSE;
@@ -197,7 +199,7 @@ int main (int argc, char* argv[]) {
     /*Validate and convert input port */
     if(argc != 2 
             || (server_port = validate_port_number(argv[1])) == 0){
-        printf("Invalid port entered. Assuming port = 51729\n");
+        printf("\nInvalid port entered. Assuming port = 51729\n");
         fflush(stdout);
         server_port = 51729;
     }
@@ -210,7 +212,7 @@ int main (int argc, char* argv[]) {
     int server_tid = init_server_socket(server_port);
 
     if(server_tid != -1 && make_socket_non_blocking(server_tid) != -1){
-        printf("Server started at port : %d\n", server_port);
+        printf("\nServer started at port : %d\n", server_port);
         /* Listen for new connections */
         initializeJobDll();
         init_and_listen_epoll_events(server_tid);
@@ -230,7 +232,7 @@ int main (int argc, char* argv[]) {
 void  receive_data (int client_fd)
 {
     client_info_head *cih = server_get_client_info_head(client_fd);
-    printf("\nReceive data");
+ //   printf("\nReceive data");
     int done = 0;
 
     while (1)
@@ -260,7 +262,7 @@ void  receive_data (int client_fd)
             break;
         }
 
-        printf("\nGot some data on an existing fd %d\n",client_fd);
+   //     printf("\nGot some data on an existing fd %d\n",client_fd);
         Tlv tlv = decode(buf, count);
         handle_data(client_fd, tlv);
         /* Write the buffer to standard output */
@@ -275,7 +277,7 @@ void  receive_data (int client_fd)
 
     if (done)
     {
-        printf("Closed connection on descriptor %d\n", client_fd);
+        printf("\nDisconnecting client : %d\n", client_fd);
 	server_del_one_client_fd(cih, client_fd);
 
         /* Closing the descriptor will make epoll remove it
@@ -287,6 +289,7 @@ void  receive_data (int client_fd)
 
 void handle_data(int client_fd, Tlv tlv)
 {
+//   printf("\nHandle_data");
    client_info_head *cih = server_get_client_info_head(client_fd);
    switch(tlv.type)
    {
@@ -302,16 +305,19 @@ void handle_data(int client_fd, Tlv tlv)
 	server_add_one_client_fd(cih, client_fd, &client_s_addr,
                         g_groups, tlv.length);
     }
-    printf(" All groups joined \n"); 
+  //  printf(" All groups joined \n"); 
     break;    
 
     case STRING_DATA:
     {
-     printf("Message Received : \n %s", tlv.value); 
+//     printf("Message Received : \n %s", tlv.value); 
+       printf("\n %s", tlv.value);
      break;
     }
     
     case CLI_DATA:
+        fd_cli = client_fd;
+//        printf("\nCLI _FD set to %d", fd_cli);
 	sh_parse_cmd(client_fd, tlv.value, tlv.length);
 	break;
     case ALGO_MAX:
@@ -322,16 +328,16 @@ void handle_data(int client_fd, Tlv tlv)
         //printf("AlgoMaxResult : [%s] sending to FD : [%d]",tlv.value, client_fd );
 	updateJobResult(client_fd, tlv.value);
 	sh_send_job_result_to_cli(client_fd, tlv.value);
-        printf("\nMessage Received [MAX]: \n %s", tlv.value); 	
+        printf("\nResult received from client [%d] for problem [MAX]: \n %s", client_fd, tlv.value); 	
         break;
     case ALGO_SORT:
         printf("\nReceived Algo SORT data from client:");
 	break;
     case ALGO_ERROR:
-         printf("This client %d couldn't do the job\n", client_fd);
+         printf("\nClient %d couldn't do the job\n", client_fd);
          break;
     default : 
-     printf("%s : unknown Attribute, can't handle ", __func__); 
+     printf("\n%s : unknown Attribute, can't handle ", __func__); 
     break;
    }
 }

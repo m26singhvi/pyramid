@@ -78,8 +78,8 @@ client_input_sanity_check (int argc,
     int port = 0;
     char *as = argv[1];
     char *ps = argv[2];
-    printf("Address : %s\n", as);
-    printf("Port : %s\n", ps);
+//    printf("\nAddress : %s", as);
+//    printf("\nPort : %s", ps);
 
     int i = 0;
 
@@ -186,7 +186,7 @@ main (int argc, char* argv[])
         
 	//Receive task from user and send back result
 	receive_exec_request(client_s_fd);
-        printf("\nDone Request");
+//        printf("\nDone Request");
     }	
     client_close_fd(client_s_fd);
 
@@ -249,7 +249,7 @@ handle_exec_data(int server_fd, Tlv tlv)
             }
 
 	    send_data(server_fd, "\nMAX Request received at client.\n", ALGO_MAX);
-	    printf("\nRequest Recevied to find max in a file\n");
+//	    printf("\nRequest Recevied to find max in a file\n");
 	    break;
 	}
         case ALGO_SORT:
@@ -271,7 +271,7 @@ handle_exec_data(int server_fd, Tlv tlv)
 void  
 receive_exec_request (int server_fd)
 {
-    printf("\nReceive data from fd %d\n", server_fd);
+ //   printf("\nReceive data from fd %d\n", server_fd);
     int done = 0;
 
     while (1)
@@ -300,7 +300,7 @@ receive_exec_request (int server_fd)
             done = 1;
             break;
         }
-        printf("Got some data on an existing fd %d\n",server_fd);
+ //       printf("Got some data on an existing fd %d\n",server_fd);
         Tlv tlv = decode(buf, count);
         handle_exec_data(server_fd, tlv);
         /* Write the buffer to standard output */
@@ -365,7 +365,7 @@ send_joining_groups (int fd, uint32_t *groups, int numgroups)
      if ((sent = send(fd, buf.payload, encoded_len, 0)) == -1) 
         report_error_and_terminate("Failed to send data");
      else
-       printf("Joining Groups Sent\n");
+       printf("\nRequest sent to server for joining groups.");
 }
 
 
