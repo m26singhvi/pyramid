@@ -19,6 +19,7 @@ int lines_input_file(char *input){
         while(fgets ( line, sizeof line, file ) != NULL){
             num++;
         }
+    fclose(f);
     }
     return num;
 }
@@ -40,6 +41,7 @@ api_status_t read_input_file(char *input , int_vector_t * output){
         }
         output->vector[count++] = num;
     }
+    fclose(f);
     return API_SUCCESS;
 }
 
