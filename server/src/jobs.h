@@ -25,6 +25,8 @@ typedef struct ClientNode
 typedef struct Job
 {
   int id;
+  long long result;
+  char result_path[256];
   Task *task;
   ClientNode *head;
   ClientNode *tail;
