@@ -41,5 +41,5 @@ report_error_and_terminate (char* msg)
 
 typedef unsigned int uint;
 
-void db_server_divide (char *path, unsigned int job_id, unsigned int n);
+int db_server_divide (char *path, unsigned int job_id, unsigned int n);
 #endif /* __COMMON_H__ */

@@ -200,7 +200,7 @@ handle_exec_data(int server_fd, Tlv tlv)
 	{
 	    //CALL MAX API
             if(main_api(tlv.value, "output.txt", FIND_MAX) == API_SUCCESS){
-                send_data(server_fd, "\nmax written to output file\n", ALGO_MAX);
+                send_data(server_fd, "MAXResult", ALGO_MAX);
             } else {
                 send_data(server_fd, "\nClientErrorType\n", ALGO_ERROR);
             }

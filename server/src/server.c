@@ -231,7 +231,7 @@ void  receive_data (int client_fd)
             break;
         }
 
-        printf("Got some data on an existing fd %d\n",client_fd);
+        printf("\nGot some data on an existing fd %d\n",client_fd);
         Tlv tlv = decode(buf, count);
         handle_data(client_fd, tlv);
         /* Write the buffer to standard output */
@@ -290,8 +290,9 @@ void handle_data(int client_fd, Tlv tlv)
          // store the base path , free the client
          // and check if all the clients are done or not
          // if done, process the sub-results and remove the job
-        printf("\nReceived Algo MAX data from client:");
-        printf("Message Received [MAX]: \n %s", tlv.value); 	
+        printf("AlgoMaxResult : [%s] sending to FD : [%d]",tlv.value, client_fd );
+	sh_send_job_result_to_cli(client_fd, tlv.value);
+        printf("\nMessage Received [MAX]: \n %s", tlv.value); 	
         break;
     case ALGO_SORT:
         printf("\nReceived Algo SORT data from client:");

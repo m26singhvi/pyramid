@@ -40,15 +40,26 @@ static int make_socket_non_blocking (int sfd)
 
 unsigned int handle_data(Tlv tlv)
 {
+   printf("\nHandle_data");
    switch(tlv.type) {
    case CLI_DATA:
    {
-       printf("\n%s", tlv.value);
+       printf("\n[%s]", tlv.value);
        return 0;
+   }
+   case ALGO_MAX:
+   {
+	printf("\n%s", tlv.value);
+	return 0;
+   }
+   case ALGO_SORT:
+   {
+	printf("\n[%s]", tlv.value);
+	return 0;
    }
    case GOOD_BYE:
    {
-       //printf("Message Complete \n");
+       printf("\n-----*****----- \n");
        return 1;
    } 
    default :
@@ -62,7 +73,7 @@ unsigned int handle_data(Tlv tlv)
 
 void  receive_data ()
 {
-    //printf("\nReceive data");
+    printf("\nReceive CLI data");
     unsigned int done = 0;
 
     while (1)
@@ -93,7 +104,7 @@ void  receive_data ()
         }
 
 	if (count > 0) {
-            //printf("Got some data on an existing fd %d\n",cli_fd);
+            printf("Got some data on an existing fd %d\n",cli_fd);
             Tlv tlv = decode(buf, count);
             done = handle_data(tlv);
             if (done == 1)

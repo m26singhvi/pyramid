@@ -151,6 +151,28 @@ sh_allocate_job_id()
 }
 
 void
+sh_send_job_result_to_cli(int client_fd, char *data)
+{
+    char storage_buffer[ONE_KB];
+    char format_buffer[ONE_KB];
+    int tc = 0;
+    int c = 0;
+
+    printf("\nResult : %s", data);
+    c = snprintf(format_buffer, ONE_KB, "[%s]", data);
+    tc = sh_try_to_send_data(client_fd, storage_buffer, format_buffer, tc, c,
+                                        CLI_DATA);
+
+    if (tc) {
+        sh_send_encoded_data(client_fd, storage_buffer, CLI_DATA);
+    }
+
+//    sh_send_encoded_data(client_fd, data, CLI_DATA);
+    printf("\nJob result sent to CLI");
+}
+
+
+void
 sh_execute_job(int cfd, long long int job_id, int task, int multicast_groupid, char *file)
 {
     char storage_buffer[ONE_KB];

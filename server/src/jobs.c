@@ -11,6 +11,7 @@
 
 bool initJob(int groupId, int jobId, int taskType, char *inputFile)
 {
+
    if ((groupId <= 0)|| (jobId < 0))
     return false;
    
@@ -45,8 +46,11 @@ bool initJob(int groupId, int jobId, int taskType, char *inputFile)
     printf("Cannot execute the task now");
     return false;
   }
-  db_server_divide(task->basePath, jobId, numClient);
-  // call the api to divide the task here, check with Praveen
+  
+  // call the api to divide the task here
+  int file_status =  db_server_divide(task->basePath, jobId, numClient);
+  if(file_status)
+      return false;
 
   // send tlv to all the clients here 
   bool sent = assignJob(jobNode, task);
