@@ -4,6 +4,7 @@
 #include <stdio.h>
 
 #include "groups.h"
+#include "jobs.h"
 #include "common.h"
 
 uint max_multicast_groups = DEFAULT_MAX_MULTICAST_GROUPS;
@@ -112,6 +113,12 @@ server_destroy_client_group_node (client_group *ci)
     free((void *) ci);
 }
 
+void
+server_update_job_node (client_info *ci, job_node *jn)
+{
+    ci->jn = jn;
+}
+
 static inline void
 server_initialize_client_info_node (client_info_head *cih,
 				    client_info *nci,
@@ -129,6 +136,7 @@ server_initialize_client_info_node (client_info_head *cih,
     nci->cip = cip;
     nci->cp = cp;
     nci->busy = FALSE;
+    nci->jn = NULL;
 }
 
 static inline void

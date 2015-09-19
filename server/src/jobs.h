@@ -3,11 +3,12 @@
 
 #include <arpa/inet.h>
 #include <stdbool.h>
-#include "groups.h"
 #include "tlv.h"
 #include "common.h"
+#include "groups.h"
 
-typedef client_info Client;
+typedef struct jobNode job_node;
+typedef struct client_info Client;
 
 typedef struct Task
 {
@@ -25,6 +26,7 @@ typedef struct ClientNode
 typedef struct Job
 {
   int id;
+  long long result;
   Task *task;
   ClientNode *head;
   ClientNode *tail;
@@ -33,10 +35,10 @@ typedef struct Job
 typedef struct jobNode
 {
   Job job;
+  int numClients;
   struct jobNode *prev;
   struct jobNode *next;
 }JobNode;
-  
 
 JobNode *pHead;
 JobNode *pTail;
@@ -50,6 +52,6 @@ bool initJob(int groupId, int jobId, int taskType, char *inputFile);
 bool assignJob(JobNode *jobNode, Task *task);
 bool addClientToJob(JobNode* jobNode, Client *client);
 bool freeClient(int jobId, Client *client);
- 
+extern enum boolean updateJobResult(int cfd, char *value); 
 
 #endif /* __JOBS_H__ */

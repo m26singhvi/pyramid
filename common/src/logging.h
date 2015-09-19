@@ -28,4 +28,7 @@ enum logging_level {
 #define logging_alerts(fs)						\
     logging_msg_print(LOGGING_LEVEL_ALERTS, fs)
 
+#define logging_notifications(fs)						\
+    logging_msg_print(LOGGING_LEVEL_NOTIFICATIONS, fs)
+
 #endif /* __LOGGING_H__ */

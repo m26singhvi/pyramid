@@ -3,10 +3,12 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+
+#include "jobs.h"
 #include "groups.h"
 #include "common.h"
-#include "jobs.h"
 #include "server_helper.h"
+#include "central_server.h"
 
 
 bool initJob(int groupId, int jobId, int taskType, char *inputFile)
@@ -34,6 +36,7 @@ bool initJob(int groupId, int jobId, int taskType, char *inputFile)
 //	printf("cg=%p, cgh->tc=%d, cg->ci=%p, cg->p=%p, cg->n=%p\n", cg, cgh->tc, cg->ci, cg->p, cg->n);
 	if (cg->ci->busy == FALSE) {
  	    addClientToJob(jobNode, cg->ci);
+	    server_update_job_node(cg->ci, jobNode);
 	    cg->ci->busy = TRUE;
 	    numClient++;
 	}
@@ -93,6 +96,7 @@ bool freeClient(int jobId, Client *client)
    {
     current->prev->next = current->next;
     current->next->prev = current->prev;
+    jobNode->numClients--;
     free (current);
    }
 
@@ -101,12 +105,20 @@ bool freeClient(int jobId, Client *client)
 bool assignJob(JobNode *jobNode, Task *task)
 {
   ClientNode *current = jobNode->job.head->next;
+  char buffer [MAX_SSH_CMD_SIZE] = {0};
+  const char * jd = cntrl_srv_get_job_directory();
+  const char * ip = cntrl_srv_get_central_repo_ip();
+  uint i = 0;
+
   while(current)
   {
     printf("\n============================================");  
    //add the index based on spliting here onto basePath
-   sh_send_encoded_data(current->client->cfd, task->basePath, task->taskType);
+   snprintf(buffer, MAX_SSH_CMD_SIZE, "%s:%sjob_%d/prob/p%d%d", ip, jd, jobNode->job.id, i/10, i%10);
+   printf("assignJob: %s", buffer);
+   sh_send_encoded_data(current->client->cfd, buffer, task->taskType);
    current = current->next;
+   i++;
   }
   printf("\nSent to all clients");
   return true;
@@ -179,4 +191,28 @@ JobNode *getJobNode(int jobId)
 }
 
 
+enum boolean updateJobResult(int cfd, char *value)
+{
+    client_info_head *cih = server_get_client_info_head(cfd);
+    Client  *client = server_search_client_fd(cih, cfd);
+    JobNode *jn = NULL;
+    long long result = atoll(value);
 
+    if (client && client->jn) {
+	jn = client->jn;
+	if (jn->job.result < result) {
+	    jn->job.result =  result;
+	}
+    } else {
+	return FALSE;
+    }
+
+    if (freeClient(jn->job.id, client) == FALSE) {
+	return FALSE;
+    }
+
+    if (jn->numClients == 0)
+	printf("THE RESULT OF MAX=%lld\n", client->jn->job.result);
+
+    return TRUE;
+}

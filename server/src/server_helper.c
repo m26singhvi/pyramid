@@ -15,7 +15,7 @@
 #include "jobs.h"
 
 long long int sh_job_id = 0;
-char *central_repo = "";
+extern char central_repo_ip[20]; 
 int job_queue_size = 10; // Default job queue size set to 10
 
 void
@@ -200,9 +200,14 @@ sh_set_repository(int cfd, char *repository)
     char format_buffer[ONE_KB];
     int tc = 0;
     int c = 0;
+    enum boolean set = TRUE;
 
-    central_repo = repository;
-    c = snprintf(format_buffer, ONE_KB, "\nCentral repository set to %s ", central_repo);
+    if (strncpy(central_repo_ip, repository, 20) == NULL) {
+	set = FALSE;
+    }
+
+    c = snprintf(format_buffer, ONE_KB, "\nCentral repository %sset to %s ",
+			set ? "" : "un", central_repo_ip);
     tc = sh_try_to_send_data(cfd, storage_buffer, format_buffer, tc, c,
                                         CLI_DATA);
 

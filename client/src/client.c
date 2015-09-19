@@ -9,10 +9,12 @@
 #include <string.h>
 #include <ctype.h>
 #include <limits.h>
+
 #include "tlv.h"
-#include "common.h" // FIXME: take care of relative addressing
+#include "common.h"
 #include "cli_commands.h"
 #include "api.h"
+#include "central_server.h"
 
 extern int inet_aton(const char *cp, struct in_addr *inp);
 
@@ -191,16 +193,57 @@ main (int argc, char* argv[])
     return 0;
 }
 
+static enum boolean
+client_get_file_from_ctrl_repo (const char *filepath)
+{
+    char buffer[MAX_SSH_CMD_SIZE] = {0};
+    const char *user = cntrl_srv_get_username();
+    const char *passwd = cntrl_srv_get_passwd();
+
+    snprintf(buffer, MAX_SSH_CMD_SIZE, "sshpass -p%s scp %s@%s input.txt",
+			passwd, user, filepath);
+
+    printf("client_get_file_from_ctrl_repo: %s\n", buffer);
+    if (system(buffer) == -1) {
+	return FALSE;
+    }
+
+    return TRUE;
+}
+
+enum boolean
+client_open_file_to_read_max (const char *filename, char result[])
+{
+    FILE *fp = fopen(filename, "r");
+    enum boolean ret = TRUE;
+
+    if (fp == NULL) {
+	return FALSE;
+    }
+
+    if (fgets(result, 100, fp) == NULL) {
+	ret = FALSE;
+    }
+
+    fclose(fp);
+
+    return ret;
+}
+
 static void 
 handle_exec_data(int server_fd, Tlv tlv)
 {
+
+   char result[100] = {0};
    switch(tlv.type)
    {
         case ALGO_MAX:
 	{
 	    //CALL MAX API
-            if(main_api(tlv.value, "output.txt", FIND_MAX) == API_SUCCESS){
-                send_data(server_fd, "MAXResult", ALGO_MAX);
+            if((client_get_file_from_ctrl_repo(tlv.value) == TRUE) &&
+	       (main_api("input.txt", "output.txt", FIND_MAX) == API_SUCCESS) &&
+	       (client_open_file_to_read_max("output.txt", result) == TRUE)) {
+                send_data(server_fd, result, ALGO_MAX);
             } else {
                 send_data(server_fd, "\nClientErrorType\n", ALGO_ERROR);
             }

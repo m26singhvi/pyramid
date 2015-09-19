@@ -1,59 +1,65 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
 #include "common.h"
+#include "central_server.h"
 
 #define SUCCESS 0
 #define FAILURE 1
 
+char central_repo_ip[IP_ADDR_LEN];
 
-int db_server_divide(char *path, unsigned int job_id, unsigned int n)
+const char *job_directory = "/tmp/cohort/";
+const char *username = "cisco";
+const char *passwd = "sisco123";
+
+int
+db_server_divide (char *path,
+		  unsigned int job_id,
+		  unsigned int n)
 {
-   if (n == 0) 
+   if (n == 0) {
+	printf("Number of parts = 0");
+	return FAILURE;
+   }
+
+   char sshcmd[MAX_SSH_CMD_SIZE] = {0};
+   const char *sshsplitfmt = "sshpass -p%s ssh -o StrictHostKeyChecking=no %s@%s /home/cisco/cohort/dos.sh %d %d %s";
+
+   snprintf(sshcmd, MAX_SSH_CMD_SIZE, sshsplitfmt, passwd, username, central_repo_ip, n, job_id, path);
+   printf("db_server_divide: %s\n", sshcmd);
+
+   if (system(sshcmd) == 0)
    {
-     printf("Number of parts = 0 ");
-     return FAILURE;
-   }
-   char buf[20];
-   char split[100] = "split -dl ";
-   unsigned int count = 0;
-   FILE *fp = fopen(path, "r+");
-   if(fp == NULL){
-     printf("\nInvalid file path");
-     return FAILURE;
-   }
-   while(fgets(buf, 20, fp))
-   {
-      count++;  
-   }
-   printf("Number of Parts : %d\n", n);
-   if((count%n) == 0){
-       count = count / n;
+	printf("Split Successful \n");
    } else {
-     count = count/n +1;
+	return FAILURE;
    }
-   printf("%u",count);
-   sprintf(buf,"%d", count);
-   strcat(split, buf);
-   strcat(split, " ");
-   strcat(split, path);
-   strcat(split, " ");
-   sprintf(buf,"%d", job_id);
-   strcat(split, buf);
-   strcat(split, "_"); 
-   printf("FINAL = %s",split);
-   if (system(split) == 0)
-   {
-    printf("Split Successful \n");
-   } else{
-     return FAILURE;
-   }
-   fclose(fp);
+
    return SUCCESS;
 }
 
-int test()
+const char *
+cntrl_srv_get_job_directory (void)
 {
-   db_server_divide("/home/praveen/syspgm/test_split", 1, 11);
-   return 0;
+    return job_directory;
+}
+
+const char *
+cntrl_srv_get_central_repo_ip (void)
+{
+    return central_repo_ip;
+}
+
+const char *
+cntrl_srv_get_username (void)
+{
+    return username;
+}
+
+const char *
+cntrl_srv_get_passwd (void)
+{
+    return passwd;
 }

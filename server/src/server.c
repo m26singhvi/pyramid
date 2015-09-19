@@ -319,7 +319,8 @@ void handle_data(int client_fd, Tlv tlv)
          // store the base path , free the client
          // and check if all the clients are done or not
          // if done, process the sub-results and remove the job
-        printf("AlgoMaxResult : [%s] sending to FD : [%d]",tlv.value, client_fd );
+        //printf("AlgoMaxResult : [%s] sending to FD : [%d]",tlv.value, client_fd );
+	updateJobResult(client_fd, tlv.value);
 	sh_send_job_result_to_cli(client_fd, tlv.value);
         printf("\nMessage Received [MAX]: \n %s", tlv.value); 	
         break;

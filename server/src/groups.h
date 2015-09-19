@@ -4,9 +4,11 @@
 #include <arpa/inet.h>
 
 #include "common.h"
+#include "jobs.h"
 
 typedef struct client_group client_group;
 typedef struct client_info client_info;
+typedef struct jobNode job_node;
 
 typedef struct client_group_head {
     client_group *h;
@@ -35,11 +37,13 @@ struct client_info {
     in_addr_t cip; // client IP
     in_port_t cp; // client port
     enum boolean busy; // client's status
+    job_node *jn; // jobs information
 };
 
 extern client_group_head *multicast_groups;
 extern client_info_head *client_hash_map;
 
+extern void server_update_job_node(client_info *ci, job_node *jn);
 extern uint server_get_max_multicast_groups(void);
 extern client_group_head * server_get_client_groups_head(void);
 extern client_group_head * server_get_client_gid_head(uint gid);
