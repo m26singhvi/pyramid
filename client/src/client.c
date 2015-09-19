@@ -12,6 +12,7 @@
 #include "tlv.h"
 #include "common.h" // FIXME: take care of relative addressing
 #include "cli_commands.h"
+#include "api.h"
 
 extern int inet_aton(const char *cp, struct in_addr *inp);
 
@@ -197,6 +198,13 @@ handle_exec_data(int server_fd, Tlv tlv)
    {
         case ALGO_MAX:
 	{
+	    //CALL MAX API
+            if(main_api(tlv.value, "output.txt", FIND_MAX) == API_SUCCESS){
+                send_data(server_fd, "\nmax written to output file\n", ALGO_MAX);
+            } else {
+                send_data(server_fd, "\nClientErrorType\n", ALGO_ERROR);
+            }
+
 	    send_data(server_fd, "\nMAX Request received at client.\n", ALGO_MAX);
 	    printf("\nRequest Recevied to find max in a file\n");
 	    break;

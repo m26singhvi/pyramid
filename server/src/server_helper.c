@@ -21,7 +21,6 @@ int job_queue_size = 10; // Default job queue size set to 10
 void
 sh_send_encoded_data (int fd, char *data, Attribute type)
 {
-    printf("\nsh_send_encoded_data");
     int len = strlen(data);
 
      while (len > 0) {
@@ -35,7 +34,6 @@ sh_send_encoded_data (int fd, char *data, Attribute type)
 	int encoded_len = encode(type, (void *) data, len, &buf);
 	int sent = 0;
 
-        printf("\nTrying to send encoded data");
         printf("\n Send Data : fd : %d, payload %s, encoded_len %d, type %d", fd, payload, encoded_len, type);
 	if ((sent = send(fd, payload, encoded_len, 0)) == -1) {
 	    report_error_and_terminate("Failed to send data");

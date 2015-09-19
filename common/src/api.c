@@ -55,6 +55,7 @@ api_status_t write_op_file(int_vector_t *res, char *output)
     for(long long i = 0 ; i < res->len ; i++) {
         fprintf(f, "%d\n", res->vector[i]);
     }
+    fclose(f);
 
     return API_SUCCESS;
 }

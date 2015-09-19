@@ -367,7 +367,7 @@ void parse_cli(char *cli_string) {
 }
 
 void cli_main(int fd){
-    char str[50];
+    char str[100];
    
     cli_fd = fd;
     make_socket_non_blocking(fd);
