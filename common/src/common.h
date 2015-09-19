@@ -1,6 +1,9 @@
 #ifndef __COMMON_H__
 #define __COMMON_H__
 
+#include <stdio.h>
+#include <stdlib.h>
+
 #define ONE_KB 1024
 
 #define IPV4_SOCKADDR(sa, f, p, a) {                                    \
@@ -33,9 +36,16 @@ struct thread_args {
 };
 
 static inline void
-report_error_and_terminate (char* msg)
+report_error_and_terminate (const char *msg)
 {
     perror(msg);
+    exit(EXIT_FAILURE);
+}
+
+static inline void
+print_error_and_terminate (const char *msg)
+{
+    printf("%s\n", msg);
     exit(EXIT_FAILURE);
 }
 

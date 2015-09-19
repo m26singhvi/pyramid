@@ -37,7 +37,8 @@ struct client_info {
     enum boolean busy; // client's status
 };
 
-extern client_info_head client_hash_map[];
+extern client_group_head *multicast_groups;
+extern client_info_head *client_hash_map;
 
 extern uint server_get_max_multicast_groups(void);
 extern client_group_head * server_get_client_groups_head(void);
@@ -63,7 +64,7 @@ extern uint server_get_max_hashmap_size(void);
 		for ((p) = (head)->h; (p); (p) = (p)->r)
 
 #define FOR_ALL_MULTICAST_GROUPS(i) \
-		for (i = 0; i < server_get_max_multicast_groups(); i++)
+		for ((i) = 0; i < server_get_max_multicast_groups(); (i)++)
 
 #define FOR_ALL_GROUP_IDS(p, h) \
                 for ((p) = (h); (p); (p) = (p)->n)

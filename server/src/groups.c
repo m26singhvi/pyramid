@@ -13,13 +13,12 @@ uint max_hashmap_size = DEFAULT_MAX_HASHMAP_SIZE;
 /*
  * This is a client multicast group array
  */
-client_group_head multicast_groups[DEFAULT_MAX_MULTICAST_GROUPS];
-
-client_info_head client_hash_map[DEFAULT_MAX_HASHMAP_SIZE];
+client_group_head *multicast_groups;
 
 /*
- * This is the header to the all the client information list
+ * This is the client hashmap
  */
+client_info_head *client_hash_map;
 //client_info_head ci_list_head;
 
 uint
