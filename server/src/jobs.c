@@ -35,19 +35,19 @@ bool initJob(int groupId, int jobId, int taskType, char *inputFile)
 	if (cg->ci->busy == FALSE) {
  	    addClientToJob(jobNode, cg->ci);
 	    cg->ci->busy = TRUE;
-	    numClient++;
 	}
 	cg = cg->n;
   }
  // printf("Number of Clients : %d\n", numClient);
-  if (numClient == 0)
+  if (jobNode->numClients == 0)
   {
     //delete the job here , remove from dll
     printf("\nCannot execute the task now");
     return false;
   }
+  db_server_divide(task->basePath, jobId, jobNode->numClients);
   
-  // call the api to divide the task here
+// call the api to divide the task here
   int file_status =  db_server_divide(task->basePath, jobId, numClient);
   if(file_status)
       return false;
@@ -69,7 +69,7 @@ bool addClientToJob(JobNode *jobNode, Client *client)
    node->prev = jobNode->job.tail;
    jobNode->job.tail->next = node;
    jobNode->job.tail= node;
-// take care of head here 
+   jobNode->numClients++;
    return true;
 }
 
@@ -77,22 +77,32 @@ bool freeClient(int jobId, Client *client)
 {
   if (jobId < 0)
    return false;
- 
+
+  printf("%s\n",__func__ ); 
   JobNode *jobNode = getJobNode(jobId);
   
   if (jobNode == NULL)
    return false;
 
-  ClientNode *current = jobNode->job.head;
+  ClientNode *current = jobNode->job.head->next;
   while ((current)&&(current->client != client))
     current = current->next;
 
   if (current == NULL)
    printf("\nClient is not in the list");
+  else if (current->next == NULL)
+   {
+    current->prev->next = NULL;
+    client->busy = FALSE;  //client is no longer busy
+    jobNode->job.tail = current->prev;
+    jobNode->numClients--;
+    free (current);
+   }
   else
    {
-    current->prev->next = current->next;
     current->next->prev = current->prev;
+    client->busy = FALSE;  //client is no longer busy
+    jobNode->numClients--;
     free (current);
    }
 
@@ -120,6 +130,7 @@ bool initializeJobDll()
   pHead->job.id = -1;
   pHead->job.head = NULL;
   pHead->job.tail = NULL;
+  pHead->numClients = 0;
   pTail = pHead; 
   return true;
 }
@@ -138,6 +149,7 @@ JobNode* addJob(int jobId, Task *task)
   new->job.head->next = new->job.tail;
   new->job.tail = new->job.head;
   new->job.task = task;
+  new->numClients = 0;
   pTail->next = new;
   pTail = new; 
   return new; 
@@ -153,11 +165,22 @@ bool removeJob( int jobId)
    printf("\nNo such job present\n");
    return false;
   }
-  else if((jobNode->job.head == NULL)&&(jobNode->job.tail == NULL))
-  {
-    jobNode->prev->next = jobNode->next;
-    jobNode->next->prev = jobNode->prev;
-    free(jobNode); 
+  else if((jobNode->job.head->next == NULL)&&(jobNode->job.tail->next == NULL))
+  {  
+    if(jobNode->next == NULL)
+    {
+     jobNode->prev->next = jobNode->next;
+     pTail = jobNode->prev;
+    }
+    else
+    {
+     jobNode->prev->next = jobNode->next;
+     jobNode->next->prev = jobNode->prev;
+    }
+     free(jobNode->job.head);
+     free(jobNode->job.tail);
+     free(jobNode->job.task);
+     free(jobNode); 
   }
   else
   {
@@ -174,7 +197,7 @@ JobNode *getJobNode(int jobId)
   JobNode *jobNode = pHead->next;
   while((jobNode)&&(jobNode->job.id != jobId))
    jobNode = jobNode->next;
-
+  
   return jobNode;
 }
 
