@@ -11,8 +11,8 @@
 char central_repo_ip[IP_ADDR_LEN];
 
 const char *job_directory = "/tmp/cohort/";
-const char *username = "cisco";
-const char *passwd = "sisco123";
+const char *username = "repository";
+const char *passwd = "ashuvenda";
 
 int
 db_server_divide (char *path,
@@ -25,10 +25,10 @@ db_server_divide (char *path,
    }
 
    char sshcmd[MAX_SSH_CMD_SIZE] = {0};
-   const char *sshsplitfmt = "sshpass -p%s ssh -o StrictHostKeyChecking=no %s@%s /home/cisco/cohort/dos.sh %d %d %s";
+   const char *sshsplitfmt = "sshpass -p%s ssh -o StrictHostKeyChecking=no %s@%s /home/repository/cohort/dos.sh %d %d %s";
 
    snprintf(sshcmd, MAX_SSH_CMD_SIZE, sshsplitfmt, passwd, username, central_repo_ip, n, job_id, path);
-   printf("db_server_divide: %s\n", sshcmd);
+   // make this debug: printf("db_server_divide: %s\n", sshcmd);
 
    if (system(sshcmd) == 0)
    {

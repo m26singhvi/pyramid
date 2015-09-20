@@ -25,15 +25,14 @@ bool initJob(int groupId, int jobId, int taskType, char *inputFile)
   JobNode *jobNode = addJob(jobId, task);
   if (jobNode == NULL)
   {
-    printf("\nJob Id  %d could not be added", jobId);
+    // make this debug; printf("\nJob Id  %d could not be added", jobId);
     return false;
   }
-  unsigned int numClient = 0;
   client_group_head *cgh = server_get_client_gid_head(groupId);
   client_group *cg = cgh->h;
   while(cg)
   {
-//	printf("cg=%p, cgh->tc=%d, cg->ci=%p, cg->p=%p, cg->n=%p\n", cg, cgh->tc, cg->ci, cg->p, cg->n);
+	// make this debug: printf("cg=%p, cgh->tc=%d, cg->ci=%p, cg->p=%p, cg->n=%p\n", cg, cgh->tc, cg->ci, cg->p, cg->n);
 	if (cg->ci->busy == FALSE) {
  	    addClientToJob(jobNode, cg->ci);
 	    server_update_job_node(cg->ci, jobNode);
@@ -41,7 +40,7 @@ bool initJob(int groupId, int jobId, int taskType, char *inputFile)
 	}
 	cg = cg->n;
   }
- // printf("Number of Clients : %d\n", numClient);
+  printf("Number of Clients : %d\n", jobNode->numClients);
   if (jobNode->numClients == 0)
   {
     //delete the job here , remove from dll
@@ -51,7 +50,7 @@ bool initJob(int groupId, int jobId, int taskType, char *inputFile)
   db_server_divide(task->basePath, jobId, jobNode->numClients);
   
 // call the api to divide the task here
-  int file_status =  db_server_divide(task->basePath, jobId, numClient);
+  int file_status =  db_server_divide(task->basePath, jobId, jobNode->numClients);
   if(file_status)
       return false;
 
@@ -81,7 +80,6 @@ bool freeClient(int jobId, Client *client)
   if (jobId < 0)
    return false;
 
-  printf("%s\n",__func__ ); 
   JobNode *jobNode = getJobNode(jobId);
   
   if (jobNode == NULL)
@@ -124,7 +122,7 @@ bool assignJob(JobNode *jobNode, Task *task)
  //   printf("\n============================================");  
    //add the index based on spliting here onto basePath
    snprintf(buffer, MAX_SSH_CMD_SIZE, "%s:%sjob_%d/prob/p%d%d", ip, jd, jobNode->job.id, i/10, i%10);
-   printf("assignJob: %s", buffer);
+   // make this debug: printf("assignJob: %s\n", buffer);
    sh_send_encoded_data(current->client->cfd, buffer, task->taskType);
    current = current->next;
    i++;

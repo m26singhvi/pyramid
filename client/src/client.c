@@ -194,16 +194,18 @@ main (int argc, char* argv[])
 }
 
 static enum boolean
-client_get_file_from_ctrl_repo (const char *filepath)
+client_get_file_from_ctrl_repo (const char *cntrl_repo_path,
+				const char *local_path)
 {
     char buffer[MAX_SSH_CMD_SIZE] = {0};
     const char *user = cntrl_srv_get_username();
     const char *passwd = cntrl_srv_get_passwd();
 
-    snprintf(buffer, MAX_SSH_CMD_SIZE, "sshpass -p%s scp %s@%s input.txt",
-			passwd, user, filepath);
+    snprintf(buffer, MAX_SSH_CMD_SIZE, "sshpass -p%s scp %s@%s %s",
+			passwd, user, cntrl_repo_path, local_path);
 
-    printf("client_get_file_from_ctrl_repo: %s\n", buffer);
+    // add debug here
+
     if (system(buffer) == -1) {
 	return FALSE;
     }
@@ -230,20 +232,65 @@ client_open_file_to_read_max (const char *filename, char result[])
     return ret;
 }
 
+static inline char *
+get_filename_from_path (char path[])
+{
+    char *filename = NULL;
+    char *save = NULL;
+    char *current = NULL;
+
+    filename = strtok_r(path, "/", &save);
+    while ((current = strtok_r(NULL, "/", &save)) != NULL) {
+	filename = current;
+    }
+
+    return filename;
+}
+
+static inline enum boolean
+client_generate_in_out_filenames_from_path (
+			char in[], char out[], int size, char path[])
+{
+    char *central_server_filename = get_filename_from_path(path);
+    enum boolean ret = FALSE;
+    char * in_f = "input_";
+    char * out_f = "output_";
+
+    if (central_server_filename) {
+	int path_len = strnlen(central_server_filename, size);
+	int in_len = strnlen(in_f, size);
+	int out_len = strnlen(out_f, size);
+	if (((snprintf(in, size, "%s%s", in_f, central_server_filename)) == path_len + in_len) &&
+	    (snprintf(out, size, "%s%s", out_f, central_server_filename) == path_len + out_len)) {
+	    ret = TRUE;
+	}
+    }
+
+    //add debug here
+
+    return ret;
+}
+
 static void 
 handle_exec_data(int server_fd, Tlv tlv)
 {
 
-   char result[100] = {0};
+   char buffer[100] = {0};
+   char in_file[100] = {0};
+   char out_file[100] = {0};
+   strncpy(buffer, tlv.value, 100);
+// Add debug here
    switch(tlv.type)
    {
         case ALGO_MAX:
 	{
 	    //CALL MAX API
-            if((client_get_file_from_ctrl_repo(tlv.value) == TRUE) &&
-	       (main_api("input.txt", "output.txt", FIND_MAX) == API_SUCCESS) &&
-	       (client_open_file_to_read_max("output.txt", result) == TRUE)) {
-                send_data(server_fd, result, ALGO_MAX);
+	    // Add debug here
+            if((client_generate_in_out_filenames_from_path(in_file, out_file, 100, buffer) == TRUE) &&
+	       (client_get_file_from_ctrl_repo(tlv.value, in_file) == TRUE) &&
+	       (main_api(in_file, out_file, FIND_MAX) == API_SUCCESS) &&
+	       (client_open_file_to_read_max(out_file, buffer) == TRUE)) {
+                send_data(server_fd, buffer, ALGO_MAX);
             } else {
                 send_data(server_fd, "\nClientErrorType\n", ALGO_ERROR);
             }
@@ -367,5 +414,3 @@ send_joining_groups (int fd, uint32_t *groups, int numgroups)
      else
        printf("\nRequest sent to server for joining groups.");
 }
-
-

@@ -21,7 +21,7 @@ LIBOBJECTS := $(wildcard $(COMMONDIR_OBJ)/*.a)
 rm       = rm -f
 
 # compiling flags here
-CFLAGS   = -std=c99 -Wall -Werror -Wextra -O2 -I$(COMMONDIR) -g
+CFLAGS   = -std=gnu99 -Wall -Werror -Wextra -O2 -I$(COMMONDIR) -g
 
 $(BINDIR)/$(TARGET): $(OBJECTS)
 	@mkdir -p bin/

@@ -327,7 +327,7 @@ void handle_data(int client_fd, Tlv tlv)
          // if done, process the sub-results and remove the job
         //printf("AlgoMaxResult : [%s] sending to FD : [%d]",tlv.value, client_fd );
 	updateJobResult(client_fd, tlv.value);
-	sh_send_job_result_to_cli(client_fd, tlv.value);
+	sh_send_job_result_to_cli(client_fd, tlv);
         printf("\nResult received from client [%d] for problem [MAX]: \n %s", client_fd, tlv.value); 	
         break;
     case ALGO_SORT:
