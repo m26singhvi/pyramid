@@ -136,7 +136,7 @@ sh_display_job_results(int cfd, long long int job_id)
     int tc = 0;
     int c = 0;
 
-    c = snprintf(format_buffer, ONE_KB, "\nJob Result for Job: %lld, cdf %d\n", job_id, cfd);
+    c = snprintf(format_buffer, ONE_KB, "\nJob %lld, status : Done", job_id);
     tc = sh_try_to_send_data(cfd, storage_buffer, format_buffer, tc, c,
                                         CLI_DATA);
 
@@ -152,6 +152,28 @@ void
 sh_allocate_job_id()
 {
     sh_job_id++;
+}
+
+void
+sh_send_job_failure_to_cli(int cli_fd, long long int job_id)
+{
+    char storage_buffer[ONE_KB];
+    char format_buffer[ONE_KB];
+    int tc = 0;
+    int c = 0;
+
+//    c = snprintf(format_buffer, ONE_KB, "Failed to execute Job %lld!!!\n\tThis might be due to wront file path or unavailability of resources. ", job_id);
+c = snprintf(format_buffer, ONE_KB, "%d", ALGO_ERROR);
+    tc = sh_try_to_send_data(cli_fd, storage_buffer, format_buffer, tc, c, ALGO_ERROR);
+/*    c = snprintf(format_buffer, ONE_KB, "\tThis might be due to wront file path or unavailability of resources. ");
+    tc = sh_try_to_send_data(cli_fd, storage_buffer, format_buffer, tc, c,
+                                        ALGO_ERROR);
+*/
+    if (tc) {
+        sh_send_encoded_data(cli_fd, storage_buffer, ALGO_ERROR);
+    }
+    printf("\nFailed to execute Job %lld !!!", job_id);
+
 }
 
 void
@@ -184,7 +206,7 @@ sh_execute_job(int cfd, long long int job_id, int task, int multicast_groupid, c
     int tc = 0;
     int c = 0;
 
-    c = snprintf(format_buffer, ONE_KB, "\nRequest received to execute: \n\t Job: %lld, cfd %d, task %d, group %d, file %s \n", job_id, cfd, task, multicast_groupid, file);
+    c = snprintf(format_buffer, ONE_KB, "\t Job   : %lld \n\t task  :%d \n\t group :%d \n\t file  : %s \n", job_id,  task, multicast_groupid, file);
     tc = sh_try_to_send_data(cfd, storage_buffer, format_buffer, tc, c,
                                         task);
 
@@ -276,14 +298,21 @@ sh_parse_cmd (int cfd, char *buff)
         break;
     case EXEC_JOB:
 	sh_allocate_job_id();
+	printf("New job request on server. Alloted Job id : %lld" , sh_job_id);
         int task;
         task  = atoi(strtok(NULL, delim));
         int group;
         group = atoi(strtok(NULL, delim));
         char *input_file;
         input_file = strtok(NULL, delim);
-        //sh_execute_job(cfd, sh_job_id, task, group, input_file);
-        initJob(group, sh_job_id, task, input_file);
+        sh_execute_job(cfd, sh_job_id, task, group, input_file);
+        if(!initJob(group, sh_job_id, task, input_file) == FAILURE)
+	{
+	    sh_send_job_failure_to_cli(cfd, sh_job_id);
+	}else {
+ 	    sh_display_job_results(cfd, job_id);
+	}
+        printf("\nDone");
 	break;
     case LOGGING_LEVEL_ERROR:
         //logging.level = ERROR;

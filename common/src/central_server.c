@@ -20,7 +20,7 @@ db_server_divide (char *path,
 		  unsigned int n)
 {
    if (n == 0) {
-	printf("Number of parts = 0");
+	printf("No clients available = 0");
 	return FAILURE;
    }
 
@@ -32,7 +32,7 @@ db_server_divide (char *path,
 
    if (system(sshcmd) == 0)
    {
-	printf("Split Successful \n");
+//	printf("Split Successful \n");
 	return SUCCESS;
    } else {
 	return FAILURE;

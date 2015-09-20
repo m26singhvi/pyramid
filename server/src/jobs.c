@@ -40,14 +40,14 @@ bool initJob(int groupId, int jobId, int taskType, char *inputFile)
 	}
 	cg = cg->n;
   }
-  printf("Number of Clients : %d\n", jobNode->numClients);
+  printf("Number of Clients reserved for job : %d\n", jobNode->numClients);
   if (jobNode->numClients == 0)
   {
     //delete the job here , remove from dll
     printf("\nCannot execute the task now");
     return false;
   }
-  db_server_divide(task->basePath, jobId, jobNode->numClients);
+//  db_server_divide(task->basePath, jobId, jobNode->numClients);
   
 // call the api to divide the task here
   int file_status =  db_server_divide(task->basePath, jobId, jobNode->numClients);

@@ -15,6 +15,7 @@
 
 int cli_fd;
 bool init_cli_interface = false;
+bool exec = false;
 
 static int make_socket_non_blocking (int sfd)
 {
@@ -46,6 +47,13 @@ unsigned int handle_data(Tlv tlv)
    {
        printf("\n %s", tlv.value);
        return 0;
+   }
+   case ALGO_ERROR:
+   {
+//        printf("\nError: %s", tlv.value);
+	printf("\nFailed to execute Job!!! \nThis might be due to wront file path or unavailability of resources. ");
+	exec = false;
+        return 0;
    }
    case ALGO_MAX:
    {
@@ -119,8 +127,11 @@ void  receive_data ()
            abort ();
         }*/
     }
-
+	
+    if(!exec) 
+    {
         cli_main(cli_fd);
+    }
 }
 
 
@@ -227,15 +238,15 @@ void cli_help(void) {
 		printf("\n\tshow clients all");
 		printf("\n\thelp");
 		printf("\n\tclear");
-		printf("\n\tshow job-details <job_id>");
-		printf("\n\tshow job-result <job-id>");
+//		printf("\n\tshow job-details <job_id>");
+//		printf("\n\tshow job-result <job-id>");
 		
 	 printf("\n Config Commands:");	
 		printf("\n\tset repository-address <ip-address/path>");
-		printf("\n\tset job-result-queue size <size>");
+//		printf("\n\tset job-result-queue size <size>");
 		
 	 printf("\n Execute Commands:");
-		printf("\n\texecute <TASK> <file_name> <multicast_group_id>");
+		printf("\n\texecute max/min <file_name> <multicast_group_id>");
 	printf("\n");
 }
 
@@ -326,9 +337,13 @@ void cli_exec_task(int taskid, char *file, int groupid) {
     
     printf("\nJob submitted to server for execution!\n");
     request_cli_data(buffer);
+    exec = true;
     receive_data();
-
-/*    printf("\nDetails : %d :  %s : %d", taskid, file, groupid);*/
+    if(exec == true) {
+	exec = false;
+	receive_data();
+    }
+//    printf("\nDetails : %d :  %s : %d", taskid, file, groupid);
     printf("\n");
 }
 
@@ -357,15 +372,15 @@ void parse_cli(char *cli_string) {
         cli_help();
     } else if(!strcmp(cli_string_trimmed, "clear")) {
         cli_clear_screen();
-    } else if((!strncmp(cli_string_trimmed, "set job-result-queue size", strlen("set job-result-queue size"))) && (num_words == 4)) {
-	cli_set_job_result_queue_size(atoi(words[3]));
+ /*   } else if((!strncmp(cli_string_trimmed, "set job-result-queue size", strlen("set job-result-queue size"))) && (num_words == 4)) {
+	cli_set_job_result_queue_size(atoi(words[3]));*/
     } else if((!strncmp(cli_string_trimmed, "set repository-address", strlen("set repository-address"))) && (num_words == 3)) {
         cli_set_repository_address(words[2]);
-    } else if((!strncmp(cli_string_trimmed, "show job-details", strlen("show job-details"))) && (num_words == 3)) {
+/*    } else if((!strncmp(cli_string_trimmed, "show job-details", strlen("show job-details"))) && (num_words == 3)) {
         cli_print_job_details(strtol(words[2], NULL, 10));
     } else if((!strncmp(cli_string_trimmed, "show job-result", strlen("show job-result"))) && (num_words == 3)) {
-   	cli_print_job_result(strtol(words[2], NULL, 10));
-    } else if((!strncmp(cli_string_trimmed, "exec", strlen("exec"))) && (num_words == 4)) {	
+   	cli_print_job_result(strtol(words[2], NULL, 10));*/
+    } else if((!strncmp(cli_string_trimmed, "execute", strlen("execute"))) && (num_words == 4)) {	
        int algoType = getAlgoType(words[1]);
        if (algoType == -1)
           return;
@@ -389,6 +404,8 @@ void cli_main(int fd){
  	printf("\n**************************************************************************************************************");
     	printf("\n************************************* Pyramid CLI Interface **************************************************");
         printf("\n**************************************************************************************************************\n\n");
+        cli_help();
+        printf("\n**************************************************************************************************************");
         init_cli_interface = true;
     }
 
@@ -411,7 +428,7 @@ void cli_main(int fd){
 
 int getAlgoType(char * algoType)
 {
-  if (strcmp(algoType, "sort") == 0)  return ALGO_SORT;
+//  if (strcmp(algoType, "sort") == 0)  return ALGO_SORT;
   if (strcmp(algoType, "max") == 0) return ALGO_MAX;
   
   printf("Unsupported Algorithm \n" );
