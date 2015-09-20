@@ -9,6 +9,7 @@
 #include "common.h"
 #include "server_helper.h"
 #include "central_server.h"
+#include "logging.h"
 
 
 bool initJob(int groupId, int jobId, int taskType, char *inputFile)
@@ -40,7 +41,7 @@ bool initJob(int groupId, int jobId, int taskType, char *inputFile)
 	}
 	cg = cg->n;
   }
-  printf("Number of Clients reserved for job : %d\n", jobNode->numClients);
+  logging_informational("No. of clients reserved for processing the job: %d", jobNode->numClients);
   if (jobNode->numClients == 0)
   {
     //delete the job here , remove from dll
@@ -127,7 +128,7 @@ bool assignJob(JobNode *jobNode, Task *task)
    current = current->next;
    i++;
   }
-  printf("\nSent to all clients");
+  logging_notifications("Sent to all clients");
   return true;
 }  
 
@@ -146,7 +147,7 @@ bool initializeJobDll()
 
 JobNode* addJob(int jobId, Task *task)
 {
-  printf("\n %s : Job Id = %d\n ", __func__, jobId);
+  logging_informational("%s : Job Id = %d", __func__, jobId);
 
   JobNode *new = (JobNode *)malloc(sizeof(JobNode));
   new->next = NULL;
@@ -166,7 +167,7 @@ JobNode* addJob(int jobId, Task *task)
 
 bool removeJob( int jobId)
 {
-  printf("\n%sRemoving : Job Id = %d \n",__func__ , jobId);
+  logging_informational("%sRemoving : Job Id = %d",__func__ , jobId);
   JobNode *jobNode = getJobNode(jobId);
   
   if (jobNode == NULL)
@@ -227,12 +228,17 @@ enum boolean updateJobResult(int cfd, char *value)
 	return FALSE;
     }
 
+    logging_notifications("Job Id: %d. Result received from client [%d] "			\
+			  "for problem [MAX]: %lld",
+			  client->jn->job.id, client->cfd, result);
+
     if (freeClient(jn->job.id, client) == FALSE) {
 	return FALSE;
     }
 
     if (jn->numClients == 0)
-	printf("THE RESULT OF MAX=%lld\n", client->jn->job.result);
+	logging_informational("Job Id: %d. The Result for [MAX] = %lld\n",
+			      client->jn->job.id, client->jn->job.result);
 
     return TRUE;
 }
