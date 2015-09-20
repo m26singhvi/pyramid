@@ -17,6 +17,7 @@
 #include "logging.h"
 #include "jobs.h"
 #include "dbg_server.h"
+#include "logging.h"
 
 extern unsigned int g_groups[255];
 int fd_cli;
@@ -71,7 +72,7 @@ static int init_server_socket(int server_p)
 }
 static void handle_new_client_connections(struct epoll_event ev, int epollfd, int server_fd)
 {
-    printf("\nReceived a new client connection request");
+    logging_notifications("Received a new client connection request.");
     while(1){
         struct sockaddr in_addr;
         socklen_t in_len;
@@ -92,7 +93,7 @@ static void handle_new_client_connections(struct epoll_event ev, int epollfd, in
                 break;
             }
         }
-        printf("\nNew client %d connected.", conn_sock);
+        logging_informational("New client %d connected.", conn_sock);
         if(make_socket_non_blocking(conn_sock) == -1) {
             break;
         }
@@ -199,7 +200,8 @@ int main (int argc, char* argv[]) {
     /*Validate and convert input port */
     if(argc != 2 
             || (server_port = validate_port_number(argv[1])) == 0){
-        printf("\nInvalid port entered. Assuming port = 51729\n");
+        logging_errors("Invalid port entered!");
+	logging_informational("Assuming port: 51729");
         fflush(stdout);
         server_port = 51729;
     }
@@ -212,7 +214,7 @@ int main (int argc, char* argv[]) {
     int server_tid = init_server_socket(server_port);
 
     if(server_tid != -1 && make_socket_non_blocking(server_tid) != -1){
-        printf("\nServer started at port : %d\n", server_port);
+        logging_informational("Server started at port : %d", server_port);
         /* Listen for new connections */
         initializeJobDll();
         init_and_listen_epoll_events(server_tid);
@@ -277,7 +279,7 @@ void  receive_data (int client_fd)
 
     if (done)
     {
-        printf("\nDisconnecting client : %d\n", client_fd);
+        logging_notifications("Disconnect client: %d", client_fd);
 	server_del_one_client_fd(cih, client_fd);
 
         /* Closing the descriptor will make epoll remove it
@@ -328,16 +330,16 @@ void handle_data(int client_fd, Tlv tlv)
         //printf("AlgoMaxResult : [%s] sending to FD : [%d]",tlv.value, client_fd );
 	updateJobResult(client_fd, tlv.value);
 	sh_send_job_result_to_cli(client_fd, tlv);
-        printf("\nResult received from client [%d] for problem [MAX]: \n %s", client_fd, tlv.value); 	
+        //logging_notifications("Result received from client [%d] for problem [MAX]: %s", client_fd, tlv.value); 	
         break;
     case ALGO_SORT:
-        printf("\nReceived Algo SORT data from client:");
+        logging_notifications("\nReceived Algo SORT data from client:");
 	break;
     case ALGO_ERROR:
-         printf("\nClient %d couldn't do the job\n", client_fd);
-         break;
+        logging_notifications("\nClient %d couldn't do the job\n", client_fd);
+        break;
     default : 
-     printf("\n%s : unknown Attribute, can't handle ", __func__); 
+	logging_notifications("\n%s : unknown Attribute, can't handle ", __func__); 
     break;
    }
 }

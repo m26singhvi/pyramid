@@ -4,6 +4,7 @@
 
 #include "common.h"
 #include "central_server.h"
+#include "logging.h"
 
 #define SUCCESS 0
 #define FAILURE 1
@@ -12,7 +13,7 @@ char central_repo_ip[IP_ADDR_LEN];
 
 const char *job_directory = "/tmp/cohort/";
 const char *username = "repository";
-const char *passwd = "ashuvenda";
+const char *passwd = "gracehooper";
 
 int
 db_server_divide (char *path,
@@ -32,7 +33,7 @@ db_server_divide (char *path,
 
    if (system(sshcmd) == 0)
    {
-	printf("Split Successful \n");
+	logging_informational("Split Successful");
 	return SUCCESS;
    } else {
 	return FAILURE;

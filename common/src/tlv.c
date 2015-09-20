@@ -4,8 +4,10 @@
 #include <arpa/inet.h>
 #include <limits.h>
 #include <string.h>
+
 #include "common.h" 
 #include "tlv.h"
+#include "logging.h"
 
 #define DEBUG 0
 unsigned int g_groups[255];
@@ -268,13 +270,14 @@ Tlv decode(char *buffer, unsigned int buflen)
     {
      tlv.length = tlv.length/4;
 //     printf("Num Groups = %d \n", tlv.length);
-     printf("\nNew client got added in groups : ");
+     logging_informational("New client got added in groups:");
      for (i = 0 ; i < tlv.length ; i++)
      {
        g_groups[i] = htons(*(uint32_t *)buffer);
        buffer = buffer + 4;
-       printf(" %d ", g_groups[i]);
+       printf(" %d", g_groups[i]);
      }
+	printf("\n");
     }
     break;
     case CLI_DATA:
