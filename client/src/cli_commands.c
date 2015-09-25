@@ -114,10 +114,10 @@ void  receive_data ()
 
         if (count > 0) {
             //           printf("Got some data on an existing fd %d\n",cli_fd);
-            Tlv (*decode)(char *buffer, unsigned int buflen);
+            Tlv (*decode)(char *buffer, unsigned int buflen, unsigned int * g_groups);
             ASSIGN_FUNC_PTR("decode", decode);
 
-            Tlv tlv = decode(buf, count);
+            Tlv tlv = decode(buf, count, NULL);
             done = handle_data(tlv);
             if (done == 1)
                 break;

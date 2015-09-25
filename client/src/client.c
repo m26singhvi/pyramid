@@ -351,10 +351,10 @@ receive_exec_request (int server_fd)
             break;
         }
         //       printf("Got some data on an existing fd %d\n",server_fd);
-        Tlv (*decode)(char *buffer, unsigned int buflen);
+        Tlv (*decode)(char *buffer, unsigned int buflen,unsigned int *);
         ASSIGN_FUNC_PTR("decode", decode);
 
-        Tlv tlv = decode(buf, count);
+        Tlv tlv = decode(buf, count,NULL);
         handle_exec_data(server_fd, tlv);
         /* Write the buffer to standard output */
         /*int s = write (1, tlv.value, tlv.length);

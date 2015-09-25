@@ -10,7 +10,6 @@
 #include "logging.h"
 
 #define DEBUG 0
-unsigned int g_groups[255];
 
 int encode_string_data(const char *data, const int length, Buffer *buf)
 {
@@ -245,7 +244,7 @@ int encode_cli_data(const char *data, const int length, Buffer *buf)
   return buf->length;
 }
 
-Tlv decode(char *buffer, unsigned int buflen)
+Tlv decode(char *buffer, unsigned int buflen,unsigned  int * g_groups)
 {
  // printf("Buflen = %d %s \n", buflen, buffer);
   int i = 0;

@@ -55,6 +55,6 @@ int encode_goodbye(Buffer *buf);
 int encode_algo_sort(const char *path, const int length, Buffer *buf);
 int encode_algo_max(const char *data, const int length, Buffer *buf);
 int encode_algo_error(uint32_t *error, const int length, Buffer *buf);
-Tlv  decode(char *buffer, unsigned int buflen);
+Tlv  decode(char *buffer, unsigned int buflen, unsigned int *g_groups);
 
 #endif /* __TLV_H__ */
