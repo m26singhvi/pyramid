@@ -270,7 +270,7 @@ Tlv decode(char *buffer, unsigned int buflen)
     {
      tlv.length = tlv.length/4;
 //     printf("Num Groups = %d \n", tlv.length);
-     logging_informational("New client got added in groups:");
+     //logging_informational("New client got added in groups:");
      for (i = 0 ; i < tlv.length ; i++)
      {
        g_groups[i] = htons(*(uint32_t *)buffer);

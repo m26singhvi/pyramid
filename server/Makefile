@@ -2,9 +2,9 @@
 TARGET   = server
 
 CC       = gcc
-LINKER   = gcc -o
+LINKER   = gcc -o 
 # linking flags here
-LFLAGS   = -Wall -I. -lm
+LFLAGS   = -Wall -I. -ldl 
 
 # change these to set the proper directories where each files shoould be
 SRCDIR   = src
@@ -16,7 +16,7 @@ COMMONDIR_BIN= ../common/bin
 SOURCES  := $(wildcard $(SRCDIR)/*.c)
 INCLUDES := $(wildcard $(SRCDIR)/*.h) 
 OBJECTS  := $(SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o)
-LIBOBJECTS := $(wildcard $(COMMONDIR_BIN)/*.a)
+#LIBOBJECTS := $(wildcard $(COMMONDIR_BIN)/*.a)
 
 rm       = rm -f
 
@@ -25,7 +25,7 @@ CFLAGS   = -std=c99 -Wall -Werror -Wextra -O2 -I$(COMMONDIR) -g
 
 $(BINDIR)/$(TARGET): $(OBJECTS)
 	@mkdir -p bin/
-	@$(LINKER) $@ $(LFLAGS) $(OBJECTS) $(LIBOBJECTS)
+	@$(LINKER) $@  $(OBJECTS) $(LIBOBJECTS) $(LFLAGS)
 	@echo "Linking complete!"
 
 $(OBJECTS): $(OBJDIR)/%.o : $(SRCDIR)/%.c $(LIBS)

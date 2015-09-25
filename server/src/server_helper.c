@@ -13,9 +13,10 @@
 #include "tlv.h"
 #include "logging.h"
 #include "jobs.h"
+#include "dynamic_lib_interface.h"
 
-long long int sh_job_id = 0;
-extern char central_repo_ip[20]; 
+long long int sh_job_id = 0; 
+char central_repo_ip[20]; 
 int job_queue_size = 10; // Default job queue size set to 10
 
 void
@@ -32,7 +33,9 @@ sh_send_encoded_data (int fd, char *data, Attribute type)
 
 	buf.payload = payload;
 	buf.length = 0;
-
+    
+    int (* encode)(Attribute attr, const void *data, const int length, Buffer *buf) ;
+    ASSIGN_FUNC_PTR("encode" ,encode)
 	int encoded_len = encode(type, (void *) data, len, &buf);
 	int sent = 0;
 

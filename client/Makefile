@@ -4,7 +4,7 @@ TARGET   = client
 CC       = gcc
 LINKER   = gcc -o
 # linking flags here
-LFLAGS   = -Wall -I. -lm
+LFLAGS   = -Wall -I. -lm -ldl
 
 # change these to set the proper directories where each files shoould be
 SRCDIR   = src
@@ -16,7 +16,7 @@ COMMONDIR_OBJ= ../common/bin
 SOURCES  := $(wildcard $(SRCDIR)/*.c)
 INCLUDES := $(wildcard $(SRCDIR)/*.h) 
 OBJECTS  := $(SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o)
-LIBOBJECTS := $(wildcard $(COMMONDIR_OBJ)/*.a)
+#LIBOBJECTS := $(wildcard $(COMMONDIR_OBJ)/*.a)
 
 rm       = rm -f
 
@@ -25,7 +25,7 @@ CFLAGS   = -std=gnu99 -Wall -Werror -Wextra -O2 -I$(COMMONDIR) -g
 
 $(BINDIR)/$(TARGET): $(OBJECTS)
 	@mkdir -p bin/
-	@$(LINKER) $@ $(LFLAGS) $(OBJECTS) $(LIBOBJECTS)
+	@$(LINKER) $@ $(OBJECTS) $(LIBOBJECTS) $(LFLAGS) 
 	@echo "Linking complete!"
 
 $(OBJECTS): $(OBJDIR)/%.o : $(SRCDIR)/%.c $(LIBS)

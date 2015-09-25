@@ -8,6 +8,8 @@
 #include <limits.h>
 #include <sys/epoll.h>
 #include <errno.h>
+#include "dynamic_lib_interface.h"
+
 #include "server.h"
 
 #include "common.h" 
@@ -19,11 +21,12 @@
 #include "dbg_server.h"
 #include "logging.h"
 
-extern unsigned int g_groups[255];
+unsigned int g_groups[255];
 int fd_cli;
 
 
 #define MAX_EVENTS 2500 * 4
+
 
 static int make_socket_non_blocking (int sfd)
 {
@@ -264,8 +267,11 @@ void  receive_data (int client_fd)
             break;
         }
 
-   //     printf("\nGot some data on an existing fd %d\n",client_fd);
-        Tlv tlv = decode(buf, count);
+        //     printf("\nGot some data on an existing fd %d\n",client_fd);
+
+        Tlv (*decode)(char *buffer, unsigned int buflen);
+        ASSIGN_FUNC_PTR("decode", decode);
+        Tlv tlv = decode(buf,count); 
         handle_data(client_fd, tlv);
         /* Write the buffer to standard output */
         /*int s = write (1, tlv.value, tlv.length);

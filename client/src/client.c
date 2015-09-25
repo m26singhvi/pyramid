@@ -15,6 +15,7 @@
 #include "cli_commands.h"
 #include "api.h"
 #include "central_server.h"
+#include "dynamic_lib_interface.h"
 
 extern int inet_aton(const char *cp, struct in_addr *inp);
 
@@ -198,8 +199,8 @@ client_get_file_from_ctrl_repo (const char *cntrl_repo_path,
 				const char *local_path)
 {
     char buffer[MAX_SSH_CMD_SIZE] = {0};
-    const char *user = cntrl_srv_get_username();
-    const char *passwd = cntrl_srv_get_passwd();
+    const char *user = "";//cntrl_srv_get_username();
+    const char *passwd = "";//cntrl_srv_get_passwd();
 
     snprintf(buffer, MAX_SSH_CMD_SIZE, "sshpass -p%s scp %s@%s %s",
 			passwd, user, cntrl_repo_path, local_path);
@@ -286,6 +287,8 @@ handle_exec_data(int server_fd, Tlv tlv)
 	{
 	    //CALL MAX API
 	    // Add debug here
+            api_status_t (*main_api)(void *input, void *output, api_id_t id);
+            ASSIGN_FUNC_PTR("main_api",main_api);
             if((client_generate_in_out_filenames_from_path(in_file, out_file, 100, buffer) == TRUE) &&
 	       (client_get_file_from_ctrl_repo(tlv.value, in_file) == TRUE) &&
 	       (main_api(in_file, out_file, FIND_MAX) == API_SUCCESS) &&
@@ -347,7 +350,10 @@ receive_exec_request (int server_fd)
             done = 1;
             break;
         }
- //       printf("Got some data on an existing fd %d\n",server_fd);
+        //       printf("Got some data on an existing fd %d\n",server_fd);
+        Tlv (*decode)(char *buffer, unsigned int buflen);
+        ASSIGN_FUNC_PTR("decode", decode);
+
         Tlv tlv = decode(buf, count);
         handle_exec_data(server_fd, tlv);
         /* Write the buffer to standard output */
@@ -384,6 +390,8 @@ send_data (int fd, char *buffer, int ALGO)
             memset(payload, 0, 1024);
             buf.payload = payload;
             buf.length = 0;
+            int (* encode)(Attribute attr, const void *data, const int length, Buffer *buf);
+            ASSIGN_FUNC_PTR("encode",encode);
             int encoded_len = encode(ALGO, (void *)buffer , len, &buf);
 	    if ((sent = send(fd, payload, encoded_len, 0)) == -1) {
 		report_error_and_terminate("Failed to send data");
@@ -407,6 +415,8 @@ send_joining_groups (int fd, uint32_t *groups, int numgroups)
     memset(payload, 0, 1024);
     buf.payload = payload;
     buf.length = 0;
+    int (* encode)(Attribute attr, const void *data, const int length, Buffer *buf);
+    ASSIGN_FUNC_PTR("encode",encode);
     int encoded_len = encode(JOIN_GROUP, (void *)groups, numgroups, &buf);
 	   
      if ((sent = send(fd, buf.payload, encoded_len, 0)) == -1) 

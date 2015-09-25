@@ -10,6 +10,7 @@
 #include "common.h"
 #include "tlv.h"
 #include "logging.h"
+#include "dynamic_lib_interface.h"
 
 #define CLI_MAX_WORDS 5
 
@@ -111,14 +112,17 @@ void  receive_data ()
             break;
         }
 
-	if (count > 0) {
- //           printf("Got some data on an existing fd %d\n",cli_fd);
+        if (count > 0) {
+            //           printf("Got some data on an existing fd %d\n",cli_fd);
+            Tlv (*decode)(char *buffer, unsigned int buflen);
+            ASSIGN_FUNC_PTR("decode", decode);
+
             Tlv tlv = decode(buf, count);
             done = handle_data(tlv);
             if (done == 1)
-               break;
-	}
-   
+                break;
+        }
+
         /* Write the buffer to standard output */
 /*        int s = write (1, tlv.value, tlv.length);
         if (s == -1)
@@ -155,6 +159,8 @@ void request_cli_data(char *cli_buff)
         memset(payload, 0, 1024);
         buf.payload = payload;
         buf.length = 0;
+        int (* encode)(Attribute attr, const void *data, const int length, Buffer *buf);
+        ASSIGN_FUNC_PTR("encode",encode);
         int encoded_len = encode(CLI_DATA, (void *)buffer , len, &buf);
         if ((sent = send(cli_fd, payload, encoded_len, 0)) == -1) {
             report_error_and_terminate("Failed to send data");
