@@ -16,7 +16,7 @@ COMMONDIR_BIN= ../common/bin
 SOURCES  := $(wildcard $(SRCDIR)/*.c)
 INCLUDES := $(wildcard $(SRCDIR)/*.h) 
 OBJECTS  := $(SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o)
-#LIBOBJECTS := $(wildcard $(COMMONDIR_BIN)/*.a)
+LIBOBJECTS := $(wildcard $(COMMONDIR_BIN)/*.a)
 
 rm       = rm -f
 

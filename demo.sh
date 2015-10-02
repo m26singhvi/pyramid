@@ -1,15 +1,19 @@
 trap "trap - SIGTERM && kill -- -$$" SIGINT SIGTERM EXIT
 
+make
 ip=127.0.0.1
-port=51729
+port=$1
 groups='5 8 12 16 3'
-count=$1
-xterm -e ./server/bin/server $port &
+count=$2
+cd server
+xterm -e ./bin/server $port &
+sleep 5
+cd ../client
 until [[ $count -lt 0 ]]; do
-    xterm -e ./client/bin/client $ip $port $groups &
+    xterm -e ./bin/client $ip $port $groups &
     let count-=1
 done
-
-xterm -e ./client/bin/client $ip $port CLI &
+sleep 5
+xterm -e ./bin/client $ip $port CLI &
 
 wait

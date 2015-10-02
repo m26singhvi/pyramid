@@ -4,7 +4,7 @@
 void * get_function_ptr(char * func_name){
     char *error;
     void *ret;
-    void *lib_handle = dlopen("../common/bin/common_lib.so",RTLD_NOW|RTLD_GLOBAL);
+    void *lib_handle = dlopen("../dynamic/bin/common_lib.so",RTLD_NOW|RTLD_GLOBAL);
     if (!lib_handle) {
         fprintf(stderr, "%s\n", dlerror());
         exit(EXIT_FAILURE);

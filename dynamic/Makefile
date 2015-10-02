@@ -1,8 +1,8 @@
 # project name (generate executable with this name)
-TARGET   = common_lib.a
+TARGET   = common_lib.so
 
 CC       = gcc
-LINKER   = ar
+LINKER   = gcc -export-dynamic --shared -fpic
 # linking flags here
 LFLAGS   = -Wall -I. 
 
@@ -19,11 +19,11 @@ LIBSOURCES := $(wildcard $(COMMONDIR)/*.c)
 rm       = rm -f
 
 # compiling flags here
-CFLAGS   = -std=c99 -Wall -Werror -Wextra -O2 -g
+CFLAGS   = -fPIC -std=c99 -Wall -Werror -Wextra -O2 -g
 
 $(BINDIR)/$(TARGET): $(OBJECTS)
 	@mkdir -p bin/
-	@$(LINKER) rcs $(BINDIR)/$(TARGET)  $(OBJECTS) 
+	@$(LINKER) -o $(BINDIR)/$(TARGET)  $(OBJECTS) 
 	@echo "Linking complete!"
 
 $(OBJECTS): $(OBJDIR)/%.o : $(SRCDIR)/%.c $(LIBS)

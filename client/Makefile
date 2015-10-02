@@ -11,17 +11,18 @@ SRCDIR   = src
 OBJDIR   = obj
 BINDIR   = bin
 COMMONDIR= ../common/src
+DYNAMICDIR=../dynamic/src
 COMMONDIR_OBJ= ../common/bin
 
 SOURCES  := $(wildcard $(SRCDIR)/*.c)
 INCLUDES := $(wildcard $(SRCDIR)/*.h) 
 OBJECTS  := $(SOURCES:$(SRCDIR)/%.c=$(OBJDIR)/%.o)
-#LIBOBJECTS := $(wildcard $(COMMONDIR_OBJ)/*.a)
+LIBOBJECTS := $(wildcard $(COMMONDIR_OBJ)/*.a)
 
 rm       = rm -f
 
 # compiling flags here
-CFLAGS   = -std=gnu99 -Wall -Werror -Wextra -O2 -I$(COMMONDIR) -g
+CFLAGS   = -std=gnu99 -Wall -Werror -Wextra -O2 -I$(COMMONDIR) -I$(DYNAMICDIR) -g
 
 $(BINDIR)/$(TARGET): $(OBJECTS)
 	@mkdir -p bin/
