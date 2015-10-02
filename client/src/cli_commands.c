@@ -113,9 +113,7 @@ void  receive_data ()
         }
 
         if (count > 0) {
-            //           printf("Got some data on an existing fd %d\n",cli_fd);
-            Tlv (*decode)(char *buffer, unsigned int buflen, unsigned int * g_groups);
-            ASSIGN_FUNC_PTR("decode", decode);
+            //printf("Got some data on an existing fd %d\n",cli_fd);
 
             Tlv tlv = decode(buf, count, NULL);
             done = handle_data(tlv);
@@ -159,8 +157,6 @@ void request_cli_data(char *cli_buff)
         memset(payload, 0, 1024);
         buf.payload = payload;
         buf.length = 0;
-        int (* encode)(Attribute attr, const void *data, const int length, Buffer *buf);
-        ASSIGN_FUNC_PTR("encode",encode);
         int encoded_len = encode(CLI_DATA, (void *)buffer , len, &buf);
         if ((sent = send(cli_fd, payload, encoded_len, 0)) == -1) {
             report_error_and_terminate("Failed to send data");

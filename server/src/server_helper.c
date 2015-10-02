@@ -34,8 +34,6 @@ sh_send_encoded_data (int fd, char *data, Attribute type)
 	buf.payload = payload;
 	buf.length = 0;
     
-    int (* encode)(Attribute attr, const void *data, const int length, Buffer *buf) ;
-    ASSIGN_FUNC_PTR("encode" ,encode)
 	int encoded_len = encode(type, (void *) data, len, &buf);
 	int sent = 0;
 

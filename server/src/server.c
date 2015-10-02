@@ -269,8 +269,6 @@ void  receive_data (int client_fd)
 
         //     printf("\nGot some data on an existing fd %d\n",client_fd);
 
-        Tlv (*decode)(char *buffer, unsigned int buflen, unsigned int * g_groups);
-        ASSIGN_FUNC_PTR("decode", decode);
         Tlv tlv = decode(buf,count,g_groups); 
         handle_data(client_fd, tlv);
         /* Write the buffer to standard output */

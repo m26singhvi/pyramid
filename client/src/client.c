@@ -351,8 +351,6 @@ receive_exec_request (int server_fd)
             break;
         }
         //       printf("Got some data on an existing fd %d\n",server_fd);
-        Tlv (*decode)(char *buffer, unsigned int buflen,unsigned int *);
-        ASSIGN_FUNC_PTR("decode", decode);
 
         Tlv tlv = decode(buf, count,NULL);
         handle_exec_data(server_fd, tlv);
@@ -390,8 +388,6 @@ send_data (int fd, char *buffer, int ALGO)
             memset(payload, 0, 1024);
             buf.payload = payload;
             buf.length = 0;
-            int (* encode)(Attribute attr, const void *data, const int length, Buffer *buf);
-            ASSIGN_FUNC_PTR("encode",encode);
             int encoded_len = encode(ALGO, (void *)buffer , len, &buf);
 	    if ((sent = send(fd, payload, encoded_len, 0)) == -1) {
 		report_error_and_terminate("Failed to send data");
@@ -415,8 +411,6 @@ send_joining_groups (int fd, uint32_t *groups, int numgroups)
     memset(payload, 0, 1024);
     buf.payload = payload;
     buf.length = 0;
-    int (* encode)(Attribute attr, const void *data, const int length, Buffer *buf);
-    ASSIGN_FUNC_PTR("encode",encode);
     int encoded_len = encode(JOIN_GROUP, (void *)groups, numgroups, &buf);
 	   
      if ((sent = send(fd, buf.payload, encoded_len, 0)) == -1) 
