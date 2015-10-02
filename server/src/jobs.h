@@ -21,6 +21,7 @@ typedef struct ClientNode
   Client *client;
   struct ClientNode *prev;
   struct ClientNode *next;
+  int index;
 }ClientNode;
 
 typedef struct Job
@@ -52,8 +53,9 @@ JobNode* getJobNode(int jobId);
 
 bool initJob(int groupId, int jobId, int taskType, char *inputFile);
 bool assignJob(JobNode *jobNode, Task *task);
-bool addClientToJob(JobNode* jobNode, Client *client);
+ClientNode* addClientToJob(JobNode* jobNode, Client *client);
 bool freeClient(int jobId, Client *client);
 extern enum boolean updateJobResult(int cfd, char *value); 
-
+bool reassign_job(int cfd);
+ClientNode* getClientNode(JobNode *jobNode, Client *client);
 #endif /* __JOBS_H__ */

@@ -337,6 +337,7 @@ void handle_data(int client_fd, Tlv tlv)
 	break;
     case ALGO_ERROR:
         logging_notifications("\nClient %d couldn't do the job\n", client_fd);
+        reassign_job(client_fd);
         break;
     default : 
 	logging_notifications("\n%s : unknown Attribute, can't handle ", __func__); 

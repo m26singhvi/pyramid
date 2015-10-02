@@ -63,7 +63,7 @@ bool initJob(int groupId, int jobId, int taskType, char *inputFile)
    return false;  
 }
 
-bool addClientToJob(JobNode *jobNode, Client *client)
+ClientNode* addClientToJob(JobNode *jobNode, Client *client)
 {
    ClientNode *node = (ClientNode *)malloc(sizeof(ClientNode));
 //   printf("Node = %p\n", node); 
@@ -73,7 +73,7 @@ bool addClientToJob(JobNode *jobNode, Client *client)
    jobNode->job.tail->next = node;
    jobNode->job.tail= node;
    jobNode->numClients++;
-   return true;
+   return node;
 }
 
 bool freeClient(int jobId, Client *client)
@@ -120,7 +120,7 @@ bool assignJob(JobNode *jobNode, Task *task)
 
   while(current)
   {
- //   printf("\n============================================");  
+    current->index = i;
    //add the index based on spliting here onto basePath
    snprintf(buffer, MAX_SSH_CMD_SIZE, "%s:%sjob_%d/prob/p%d%d", ip, jd, jobNode->job.id, i/10, i%10);
    // make this debug: printf("assignJob: %s\n", buffer);
@@ -131,6 +131,68 @@ bool assignJob(JobNode *jobNode, Task *task)
   logging_notifications("Sent to all clients");
   return true;
 }  
+
+bool reassign_job(int cfd)
+{
+  client_info_head *cih = server_get_client_info_head(cfd);
+  Client  *client = server_search_client_fd(cih, cfd);
+  char buffer [MAX_SSH_CMD_SIZE] = {0};
+  const char * jd = cntrl_srv_get_job_directory();
+  const char * ip = cntrl_srv_get_central_repo_ip();
+  JobNode *jobNode = client->jn;
+  int groupId = client->cg->gid;
+  int index = 0;
+  ClientNode *oldcn = getClientNode(jobNode, client);
+  ClientNode *cn = NULL; 
+
+ 
+  client_group_head *cgh = server_get_client_gid_head(groupId);
+  client_group *cg = cgh->h;
+  while(cg)
+  {
+	if (cg->ci->busy == FALSE) {
+	    server_update_job_node(cg->ci, jobNode);
+ 	    cn = addClientToJob(jobNode, cg->ci);
+	    cg->ci->busy = TRUE;
+            break;
+	}
+	    cg = cg->n;
+  }
+
+  Client *newClient = NULL;
+  if (cg == NULL)
+  {
+   logging_informational("No free clients to reassign the job");  
+   // Reassigning to the same client
+   newClient = client;
+  }  
+  else
+  {
+    newClient = cg->ci;
+    cn->index = oldcn->index;
+    index = oldcn->index;
+    //newClient = client->index;
+    logging_informational("Reassigning new job");
+  }
+   snprintf(buffer, MAX_SSH_CMD_SIZE, "%s:%sjob_%d/prob/p%d%d", ip, jd, jobNode->job.id, index/10, index%10);
+   sh_send_encoded_data(newClient->cfd, buffer, jobNode->job.task->taskType);
+  // Freeing the old client now
+  freeClient(jobNode->job.id, client);
+  return true;  
+}
+
+ClientNode* getClientNode(JobNode *jobNode, Client *client)
+{
+  
+  ClientNode *current = jobNode->job.head->next;
+  while ((current)&&(current->client != client))
+    current = current->next;
+
+  if (current == NULL)
+   printf("\nClient is not in the list");
+
+  return current;
+}
 
 bool initializeJobDll()
 {
