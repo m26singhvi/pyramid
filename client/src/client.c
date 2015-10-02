@@ -199,8 +199,8 @@ client_get_file_from_ctrl_repo (const char *cntrl_repo_path,
 				const char *local_path)
 {
     char buffer[MAX_SSH_CMD_SIZE] = {0};
-    const char *user = "";//cntrl_srv_get_username();
-    const char *passwd = "";//cntrl_srv_get_passwd();
+    const char *user = cntrl_srv_get_username();
+    const char *passwd = cntrl_srv_get_passwd();
 
     snprintf(buffer, MAX_SSH_CMD_SIZE, "sshpass -p%s scp %s@%s %s",
 			passwd, user, cntrl_repo_path, local_path);
