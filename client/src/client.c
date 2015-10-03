@@ -15,6 +15,7 @@
 #include "cli_commands.h"
 #include "api.h"
 #include "central_server.h"
+#include "dynamic_lib_interface.h"
 
 extern int inet_aton(const char *cp, struct in_addr *inp);
 
@@ -286,6 +287,8 @@ handle_exec_data(int server_fd, Tlv tlv)
 	{
 	    //CALL MAX API
 	    // Add debug here
+            api_status_t (*main_api)(void *input, void *output, api_id_t id);
+            ASSIGN_FUNC_PTR("main_api",main_api);
             if((client_generate_in_out_filenames_from_path(in_file, out_file, 100, buffer) == TRUE) &&
 	       (client_get_file_from_ctrl_repo(tlv.value, in_file) == TRUE) &&
 	       (main_api(in_file, out_file, FIND_MAX) == API_SUCCESS) &&
@@ -347,8 +350,9 @@ receive_exec_request (int server_fd)
             done = 1;
             break;
         }
- //       printf("Got some data on an existing fd %d\n",server_fd);
-        Tlv tlv = decode(buf, count);
+        //       printf("Got some data on an existing fd %d\n",server_fd);
+
+        Tlv tlv = decode(buf, count,NULL);
         handle_exec_data(server_fd, tlv);
         /* Write the buffer to standard output */
         /*int s = write (1, tlv.value, tlv.length);

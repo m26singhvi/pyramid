@@ -25,12 +25,14 @@ enum logging_level {
     
 };
 
+void logging_message (enum logging_level );
 #define logging_define(level, fs, ...)					\
     do {								\
     logging_message(level);						\
     printf(fs, ##__VA_ARGS__);						\
     printf("\n");							\
     } while(0)
+
 
 #define logging_alerts(fs, ...)						\
     logging_define(LOGGING_LEVEL_ALERTS, fs, ##__VA_ARGS__)
@@ -47,6 +49,6 @@ enum logging_level {
 #define logging_informational(fs, ...)					\
     logging_define(LOGGING_LEVEL_INFORMATIONAL, fs, ##__VA_ARGS__)
 
-extern void logging_message(enum logging_level level);
+;
 
 #endif /* __LOGGING_H__ */

@@ -10,6 +10,7 @@
 #include "common.h"
 #include "tlv.h"
 #include "logging.h"
+#include "dynamic_lib_interface.h"
 
 #define CLI_MAX_WORDS 5
 
@@ -111,14 +112,15 @@ void  receive_data ()
             break;
         }
 
-	if (count > 0) {
- //           printf("Got some data on an existing fd %d\n",cli_fd);
-            Tlv tlv = decode(buf, count);
+        if (count > 0) {
+            //printf("Got some data on an existing fd %d\n",cli_fd);
+
+            Tlv tlv = decode(buf, count, NULL);
             done = handle_data(tlv);
             if (done == 1)
-               break;
-	}
-   
+                break;
+        }
+
         /* Write the buffer to standard output */
 /*        int s = write (1, tlv.value, tlv.length);
         if (s == -1)

@@ -5,6 +5,7 @@
 #include "common.h"
 #include "central_server.h"
 #include "logging.h"
+#include "dynamic_lib_interface.h"
 
 #define SUCCESS 0
 #define FAILURE 1
