@@ -98,6 +98,7 @@ sh_display_all_clients (int cfd)
     int c = 0;
     uint i = 0;
 
+     
     FOR_ALL_CLIENT_FDS (ci, cih, i) {
 	c = snprintf(format_buffer, ONE_KB, "%d ", ci->cfd);
 	tc = sh_try_to_send_data(cfd, storage_buffer, format_buffer, tc, c,
@@ -329,8 +330,6 @@ sh_parse_cmd (int cfd, char *buff)
 	break;
     }
 
-    sleep(1);
-//    printf("\nSending GoodBye");
     sh_send_encoded_data(cfd, buf, GOOD_BYE);
 
 }

@@ -250,8 +250,8 @@ Tlv decode(char *buffer, unsigned int buflen,unsigned  int * g_groups)
   int i = 0;
   Tlv tlv;
   //printf("Packet says : %d \n", ntohl(*(uint32_t *)buffer));
-  buffer = buffer + 4;
-  buflen = buflen - 4;
+ // buffer = buffer + 4;
+ // buflen = buflen - 4;
   
   tlv.type = htons(*(uint16_t*)buffer);
   tlv.length = htons(*(uint16_t *)(buffer + 2));
@@ -267,10 +267,10 @@ Tlv decode(char *buffer, unsigned int buflen,unsigned  int * g_groups)
      break;
     case JOIN_GROUP:
     {
-     tlv.length = tlv.length/4;
+     int numG = tlv.length/4;
 //     printf("Num Groups = %d \n", tlv.length);
      //logging_informational("New client got added in groups:");
-     for (i = 0 ; i < tlv.length ; i++)
+     for (i = 0 ; i < numG ; i++)
      {
        g_groups[i] = htons(*(uint32_t *)buffer);
        buffer = buffer + 4;

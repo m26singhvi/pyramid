@@ -22,6 +22,7 @@ extern int inet_aton(const char *cp, struct in_addr *inp);
 void receive_exec_request (int server_fd);
 static void send_data(int fd, char *buffer, int ALGO);
 static void send_joining_groups(int fd, uint32_t *groups, int numgroups);
+bool handleServerMessage(char *buf, int recvLen, int server_fd);
 
 enum client_error_msgs {
     CL_INVALID_IP,
@@ -184,7 +185,6 @@ main (int argc, char* argv[])
         printf("\nWaiting for task from server"); 
         // Take user input and send it to server
         //send_data(client_s_fd);
-        
 	//Receive task from user and send back result
 	receive_exec_request(client_s_fd);
 //        printf("\nDone Request");
@@ -352,8 +352,7 @@ receive_exec_request (int server_fd)
         }
         //       printf("Got some data on an existing fd %d\n",server_fd);
 
-        Tlv tlv = decode(buf, count,NULL);
-        handle_exec_data(server_fd, tlv);
+        handleServerMessage(buf, count, server_fd);
         /* Write the buffer to standard output */
         /*int s = write (1, tlv.value, tlv.length);
         printf("\nA.");
@@ -371,6 +370,38 @@ receive_exec_request (int server_fd)
     }
 }
 
+bool handleServerMessage(char *buf, int recvLen, int server_fd)
+{
+   int lenFromHdr = ntohl(*(uint32_t *) buf);
+   int curSegLen = lenFromHdr;
+   bool done = false;
+   if (lenFromHdr > recvLen)
+   {
+     printf("Fragmented Packet");
+     return true;
+   }
+   else 
+   { 
+     while(recvLen > 0)
+     {
+      lenFromHdr = ntohl(*(uint32_t *) buf);
+      curSegLen = lenFromHdr; 
+      buf = buf + 4;
+      lenFromHdr = lenFromHdr - 4;
+      while (lenFromHdr > 0)
+      {
+       Tlv tlv = decode(buf, lenFromHdr, NULL);
+       lenFromHdr = lenFromHdr - tlv.length - 4;
+       buf = buf + tlv.length + 4;
+       handle_exec_data(server_fd, tlv);
+      }
+      recvLen = recvLen - curSegLen;
+      
+     }
+    } 
+
+  return done;
+}
 
 /*
  * send_data ()

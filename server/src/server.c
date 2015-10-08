@@ -268,9 +268,7 @@ void  receive_data (int client_fd)
         }
 
         //     printf("\nGot some data on an existing fd %d\n",client_fd);
-
-        Tlv tlv = decode(buf,count,g_groups); 
-        handle_data(client_fd, tlv);
+        handleClientMessage(buf, count, client_fd);
         /* Write the buffer to standard output */
         /*int s = write (1, tlv.value, tlv.length);
 	printf("\nA.");
@@ -292,6 +290,40 @@ void  receive_data (int client_fd)
     }
 }
 
+bool handleClientMessage(char *buf, int recvLen, int client_fd)
+{
+   int lenFromHdr = ntohl(*(uint32_t *) buf);
+   int curSegLen = lenFromHdr;
+   bool done = false;
+   if (lenFromHdr > recvLen)
+   {
+     logging_informational("Fragmented Packet Received"); 
+     //store the packet into client context
+     return true;
+   }
+   else 
+   { 
+     while(recvLen > 0)
+     {
+      lenFromHdr = ntohl(*(uint32_t *) buf);
+      curSegLen = lenFromHdr; 
+      buf = buf + 4;
+      lenFromHdr = lenFromHdr - 4;
+      while (lenFromHdr > 0)
+      {
+       Tlv tlv = decode(buf, lenFromHdr, g_groups);
+       lenFromHdr = lenFromHdr - tlv.length - 4;
+       buf = buf + tlv.length + 4;
+       handle_data(client_fd, tlv);
+      }
+      recvLen = recvLen - curSegLen;
+      
+     }
+    } 
+
+  return done;
+}
+
 
 void handle_data(int client_fd, Tlv tlv)
 {
@@ -309,7 +341,7 @@ void handle_data(int client_fd, Tlv tlv)
 	    return;
 	}
 	server_add_one_client_fd(cih, client_fd, &client_s_addr,
-                        g_groups, tlv.length);
+                        g_groups, tlv.length/4);
     }
   //  printf(" All groups joined \n"); 
     break;    

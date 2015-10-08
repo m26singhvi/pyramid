@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <fcntl.h>
+#include <arpa/inet.h>
 #include "cli_commands.h"
 #include "common.h"
 #include "tlv.h"
@@ -114,11 +115,9 @@ void  receive_data ()
 
         if (count > 0) {
             //printf("Got some data on an existing fd %d\n",cli_fd);
-
-            Tlv tlv = decode(buf, count, NULL);
-            done = handle_data(tlv);
+            done = handleNetworkMessage(buf, count);
             if (done == 1)
-                break;
+              break;
         }
 
         /* Write the buffer to standard output */
@@ -135,6 +134,40 @@ void  receive_data ()
         cli_main(cli_fd);
     }
 }
+
+bool handleNetworkMessage(char *buf, int recvLen)
+{
+   int lenFromHdr = ntohl(*(uint32_t *) buf);
+   int curSegLen = lenFromHdr;
+   bool done = false;
+   if (lenFromHdr > recvLen)
+   {
+     logging_informational("Fragmented Packet Received"); 
+     return true;
+   }
+   else 
+   { 
+     while(recvLen > 0)
+     {
+      lenFromHdr = ntohl(*(uint32_t *) buf);
+      curSegLen = lenFromHdr; 
+      buf = buf + 4;
+      lenFromHdr = lenFromHdr - 4;
+      while (lenFromHdr > 0)
+      {
+       Tlv tlv = decode(buf, lenFromHdr, NULL);
+       lenFromHdr = lenFromHdr - tlv.length - 4;
+       buf = buf + tlv.length + 4;
+       done = handle_data(tlv);
+      }
+      recvLen = recvLen - curSegLen;
+      
+     }
+    } 
+
+  return done;
+}
+
 
 
 

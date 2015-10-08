@@ -1,10 +1,13 @@
 #include <stdio.h>
 #include <string.h>
+#include <stdbool.h>
 #include "tlv.h"
 
 unsigned int handle_data(Tlv);
 
 void receive_data();
+
+bool handleNetworkMessage(char *buf, int inlen);
 
 void request_cli_data(char *);
 
