@@ -52,7 +52,7 @@ bool initJob(int groupId, int jobId, int taskType, char *inputFile)
 //  db_server_divide(task->basePath, jobId, jobNode->numClients);
   
 // call the api to divide the task here
-  int file_status =  0;//db_server_divide(task->basePath, jobId, jobNode->numClients);
+  int file_status =  db_server_divide(task->basePath, jobId, jobNode->numClients);
   if(file_status)
       return false;
 
@@ -115,8 +115,8 @@ bool assignJob(JobNode *jobNode, Task *task)
 {
   ClientNode *current = jobNode->job.head->next;
   char buffer [MAX_SSH_CMD_SIZE] = {0};
-  const char * jd = NULL;//cntrl_srv_get_job_directory();
-  const char * ip = NULL;//cntrl_srv_get_central_repo_ip();
+  const char * jd = cntrl_srv_get_job_directory();
+  const char * ip = cntrl_srv_get_central_repo_ip();
   uint i = 0;
 
   while(current)
@@ -135,6 +135,7 @@ bool assignJob(JobNode *jobNode, Task *task)
 
 bool reassign_job(int cfd)
 {
+  logging_notifications("Reassigning Job");
   client_info_head *cih = server_get_client_info_head(cfd);
   Client  *client = server_search_client_fd(cih, cfd);
   char buffer [MAX_SSH_CMD_SIZE] = {0};

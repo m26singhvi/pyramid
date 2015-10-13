@@ -297,9 +297,6 @@ handle_exec_data(int server_fd, Tlv tlv)
             } else {
                 send_data(server_fd, "\nClientErrorType\n", ALGO_ERROR);
             }
-
-	    send_data(server_fd, "\nMAX Request received at client.\n", ALGO_MAX);
-//	    printf("\nRequest Recevied to find max in a file\n");
 	    break;
 	}
         case ALGO_SORT:
