@@ -14,7 +14,7 @@ char central_repo_ip[IP_ADDR_LEN];
 
 const char *job_directory = "/tmp/cohort/";
 const char *username = "repository";
-const char *passwd = "gracehooper";
+const char *passwd = "ashuvenda";
 
 int
 db_server_divide (char *path,

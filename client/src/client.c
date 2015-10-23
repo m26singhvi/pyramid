@@ -1,4 +1,5 @@
 #include <sys/types.h>
+#include <dlfcn.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -288,7 +289,8 @@ handle_exec_data(int server_fd, Tlv tlv)
 	    //CALL MAX API
 	    // Add debug here
             api_status_t (*main_api)(void *input, void *output, api_id_t id);
-            ASSIGN_FUNC_PTR("main_api",main_api);
+	    void * plugin_handle =NULL;
+            ASSIGN_FUNC_PTR("main_api",main_api,&plugin_handle);
             if((client_generate_in_out_filenames_from_path(in_file, out_file, 100, buffer) == TRUE) &&
 	       (client_get_file_from_ctrl_repo(tlv.value, in_file) == TRUE) &&
 	       (main_api(in_file, out_file, FIND_MAX) == API_SUCCESS) &&
@@ -297,6 +299,7 @@ handle_exec_data(int server_fd, Tlv tlv)
             } else {
                 send_data(server_fd, "\nClientErrorType\n", ALGO_ERROR);
             }
+	    dlclose(plugin_handle);
 	    break;
 	}
         case ALGO_SORT:

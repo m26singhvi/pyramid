@@ -376,7 +376,7 @@ void cli_exec_task(int taskid, char *file, int groupid) {
     receive_data();
     if(exec == true) {
 	exec = false;
-	receive_data();
+//	receive_data();    //This was added to receive result from server immediately after job is done.
     }
 //    printf("\nDetails : %d :  %s : %d", taskid, file, groupid);
     printf("\n");
