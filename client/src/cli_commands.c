@@ -223,7 +223,8 @@ static int cli_parse_line(const char *line, char *words[], int max_words)
             if (word_start)
             {
                 int len = p - word_start;
-                memcpy(words[nwords] = malloc(len + 1), word_start, len);
+   		words[nwords] = malloc(len+1);
+                memcpy(words[nwords], word_start, len);
                 words[nwords++][len] = 0;
             }
             if (!*p)
@@ -391,31 +392,30 @@ void parse_cli(char *cli_string) {
         strcat(cli_string_trimmed, words[i]);
         strcat(cli_string_trimmed, " ");
     }
-    cli_string_trimmed[strlen(cli_string_trimmed)-1]= '\0';    
 
-    if (!strcmp(cli_string_trimmed, "show multicast groups")){
+    if (!strcmp(cli_string_trimmed, "show multicast groups ")){
         cli_print_multicast_groups();
-    } else if(!strcmp(cli_string_trimmed, "show clients all")){
+    } else if(!strcmp(cli_string_trimmed, "show clients all ")){
         cli_print_clients();
-    } else if(!strcmp(cli_string_trimmed, "logging level error")){
+    } else if(!strcmp(cli_string_trimmed, "logging level error ")){
         cli_logging_level(LOGGING_LEVEL_ERROR);
-    } else if(!strcmp(cli_string_trimmed, "logging level info")){
+    } else if(!strcmp(cli_string_trimmed, "logging level info ")){
         cli_logging_level(LOGGING_LEVEL_INFO);
-    } else if(!strcmp(cli_string_trimmed, "logging level debug")){
+    } else if(!strcmp(cli_string_trimmed, "logging level debug ")){
         cli_logging_level(LOGGING_LEVEL_DEBUG);
-    } else if(!strcmp(cli_string_trimmed, "help")) {
+    } else if(!strcmp(cli_string_trimmed, "help ")) {
         cli_help();
-    } else if(!strcmp(cli_string_trimmed, "clear")) {
+    } else if(!strcmp(cli_string_trimmed, "clear ")) {
         cli_clear_screen();
  /*   } else if((!strncmp(cli_string_trimmed, "set job-result-queue size", strlen("set job-result-queue size"))) && (num_words == 4)) {
 	cli_set_job_result_queue_size(atoi(words[3]));*/
-    } else if((!strncmp(cli_string_trimmed, "set repository-address", strlen("set repository-address"))) && (num_words == 3)) {
+    } else if((!strncmp(cli_string_trimmed, "set repository-address ", strlen("set repository-address"))) && (num_words == 3)) {
         cli_set_repository_address(words[2]);
 /*    } else if((!strncmp(cli_string_trimmed, "show job-details", strlen("show job-details"))) && (num_words == 3)) {
         cli_print_job_details(strtol(words[2], NULL, 10));
     } else if((!strncmp(cli_string_trimmed, "show job-result", strlen("show job-result"))) && (num_words == 3)) {
    	cli_print_job_result(strtol(words[2], NULL, 10));*/
-    } else if((!strncmp(cli_string_trimmed, "execute", strlen("execute"))) && (num_words == 4)) {	
+    } else if((!strncmp(cli_string_trimmed, "execute ", strlen("execute"))) && (num_words == 4)) {	
        int algoType = getAlgoType(words[1]);
        if (algoType == -1)
           return;

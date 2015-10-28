@@ -2,9 +2,9 @@
 TARGET   = server
 
 CC       = gcc
-LINKER   = gcc -o 
+LINKER   = gcc -pg -o
 # linking flags here
-LFLAGS   = -Wall -I. -ldl 
+LFLAGS   = -Wall -I. -ldl
 
 # change these to set the proper directories where each files shoould be
 SRCDIR   = src
@@ -21,7 +21,7 @@ LIBOBJECTS := $(wildcard $(COMMONDIR_BIN)/*.a)
 rm       = rm -f
 
 # compiling flags here
-CFLAGS   = -std=c99 -Wall -Werror -Wextra -O2 -I$(COMMONDIR) -g
+CFLAGS   = -std=c99 -Wall -Werror -Wextra -O2 -I$(COMMONDIR) -g -pg
 
 $(BINDIR)/$(TARGET): $(OBJECTS)
 	@mkdir -p bin/

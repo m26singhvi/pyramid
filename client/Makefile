@@ -2,7 +2,7 @@
 TARGET   = client
 
 CC       = gcc
-LINKER   = gcc -o
+LINKER   = gcc -pg -o
 # linking flags here
 LFLAGS   = -Wall -I. -lm -ldl
 
@@ -22,7 +22,7 @@ LIBOBJECTS := $(wildcard $(COMMONDIR_OBJ)/*.a)
 rm       = rm -f
 
 # compiling flags here
-CFLAGS   = -std=gnu99 -Wall -Werror -Wextra -O2 -I$(COMMONDIR) -I$(DYNAMICDIR) -g
+CFLAGS   = -std=gnu99 -Wall -Werror -Wextra -O2 -I$(COMMONDIR) -I$(DYNAMICDIR) -g -pg
 
 $(BINDIR)/$(TARGET): $(OBJECTS)
 	@mkdir -p bin/

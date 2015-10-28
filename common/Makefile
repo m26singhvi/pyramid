@@ -4,7 +4,7 @@ TARGET   = common_lib.a
 CC       = gcc
 LINKER   = ar
 # linking flags here
-LFLAGS   = -Wall -I. 
+LFLAGS   = -Wall -I. -pg 
 
 # change these to set the proper directories where each files shoould be
 SRCDIR   = src
@@ -19,7 +19,7 @@ LIBSOURCES := $(wildcard $(COMMONDIR)/*.c)
 rm       = rm -f
 
 # compiling flags here
-CFLAGS   = -std=c99 -Wall -Werror -Wextra -O2 -g
+CFLAGS   = -std=c99 -Wall -Werror -Wextra -O2 -g -pg
 
 $(BINDIR)/$(TARGET): $(OBJECTS)
 	@mkdir -p bin/
