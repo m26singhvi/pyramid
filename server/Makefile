@@ -2,9 +2,9 @@
 TARGET   = server
 
 CC       = gcc
-LINKER   = gcc -pg -o
+LINKER   = gcc -o 
 # linking flags here
-LFLAGS   = -Wall -I. -ldl
+LFLAGS   = -Wall -I. -ldl -lpthread 
 
 # change these to set the proper directories where each files shoould be
 SRCDIR   = src
@@ -21,7 +21,7 @@ LIBOBJECTS := $(wildcard $(COMMONDIR_BIN)/*.a)
 rm       = rm -f
 
 # compiling flags here
-CFLAGS   = -std=c99 -Wall -Werror -Wextra -O2 -I$(COMMONDIR) -g -pg
+CFLAGS   = -std=gnu99 -Wall -Werror -Wextra -O2 -I$(COMMONDIR) -g -lpthread
 
 $(BINDIR)/$(TARGET): $(OBJECTS)
 	@mkdir -p bin/

@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include <pthread.h>
 
 #include "common.h"
 #include "groups.h"
@@ -14,10 +15,20 @@
 #include "logging.h"
 #include "jobs.h"
 #include "dynamic_lib_interface.h"
+#include "thpool.h"
 
 long long int sh_job_id = 0; 
+extern pthread_mutex_t lock_job_id;
+extern threadpool g_thpool;
 char central_repo_ip[20]; 
 int job_queue_size = 10; // Default job queue size set to 10
+
+typedef struct {
+    int task;
+    int cfd;
+    int group;
+    char input_file[256];
+}submit_job_t;    
 
 void
 sh_send_encoded_data (int fd, char *data, Attribute type)
@@ -133,7 +144,7 @@ sh_display_job_details(int cfd, long long int job_id)
 void
 sh_display_job_results(int cfd, long long int job_id)
 {
-    char storage_buffer[ONE_KB];
+   char storage_buffer[ONE_KB];
     char format_buffer[ONE_KB];
     int tc = 0;
     int c = 0;
@@ -163,12 +174,14 @@ sh_display_job_results(int cfd, long long int job_id)
 //    printf("\nJob Result for Job: %lld, cfd %d\n", job_id, cfd);
 }
 
-void
+long long int
 sh_allocate_job_id()
 {
-    sh_job_id++;
+   pthread_mutex_lock(&lock_job_id);
+   sh_job_id++;
+   pthread_mutex_unlock(&lock_job_id); 
+   return sh_job_id;
 }
-
 void
 sh_send_job_failure_to_cli(int cli_fd, long long int job_id)
 {
@@ -277,11 +290,31 @@ sh_set_job_queue_size(int cfd, int size)
 
 //   printf("\ncfd - %d, queue size %d\n", cfd, size);
 }
+
+void *submit_job(void *arg)
+{
+    submit_job_t *submit_job = (submit_job_t*)arg;
+    int cfd = submit_job->cfd;
+    int task = submit_job->task;
+    int group = submit_job->group;
+    char *input_file = &submit_job->input_file[0];
+    long long int job_id = sh_allocate_job_id();
+    sh_execute_job(cfd, job_id, task, group, input_file);
+    if(!initJob(group, job_id, task, input_file) == FAILURE)
+    {
+        sh_send_job_failure_to_cli(cfd, job_id);
+    }else {
+        sh_display_job_results(cfd, job_id);
+    }
+    return NULL;
+}
+
+
 void
 sh_parse_cmd (int cfd, char *buff)
 {
     int opcode;
-    long long int job_id = 0;
+    long long int cli_job_id = 0;
     char buf[100];
     char *repo = "";
     int queue_size = 0;
@@ -296,12 +329,12 @@ sh_parse_cmd (int cfd, char *buff)
 	sh_display_all_clients(cfd);
 	break;
     case SHOW_JOB_DETAILS:
-        job_id = strtol((strtok(NULL, delim)), NULL, 10);
-	sh_display_job_details(cfd, job_id);
+        cli_job_id = strtol((strtok(NULL, delim)), NULL, 10);
+	sh_display_job_details(cfd, cli_job_id);
 	break;
     case SHOW_JOB_RESULTS:
-        job_id = strtol((strtok(NULL, delim)), NULL, 10);
-	sh_display_job_results(cfd, job_id);
+        cli_job_id = strtol((strtok(NULL, delim)), NULL, 10);
+	sh_display_job_results(cfd, cli_job_id);
 	break;
     case SET_REPOSITORY:
         repo = strtok(NULL, delim);
@@ -312,23 +345,17 @@ sh_parse_cmd (int cfd, char *buff)
         sh_set_job_queue_size(cfd, queue_size);
         break;
     case EXEC_JOB:
-	sh_allocate_job_id();
-	printf("New job request on server. Alloted Job id : %lld" , sh_job_id);
-        int task;
-        task  = atoi(strtok(NULL, delim));
-        int group;
-        group = atoi(strtok(NULL, delim));
+    {
+        submit_job_t job_s;
+        job_s.cfd = cfd;
+        job_s.task = atoi(strtok(NULL, delim));
+        job_s.group = atoi(strtok(NULL, delim));
         char *input_file;
         input_file = strtok(NULL, delim);
-        sh_execute_job(cfd, sh_job_id, task, group, input_file);
-        if(!initJob(group, sh_job_id, task, input_file) == FAILURE)
-	{
-	    sh_send_job_failure_to_cli(cfd, sh_job_id);
-	}/*else {
- 	    sh_display_job_results(cfd, job_id);
-	}*/
-        printf("\nDone");
-	break;
+        strcpy(job_s.input_file, input_file);
+        thpool_add_work(g_thpool, submit_job, (void *)&job_s);
+    }   
+       break;
     case LOGGING_LEVEL_ERROR:
         //logging.level = ERROR;
         break;

@@ -10,6 +10,7 @@
 #include "server_helper.h"
 #include "central_server.h"
 #include "logging.h"
+#include "pthread.h"
 #include "dynamic_lib_interface.h"
 
 
@@ -27,6 +28,7 @@ bool initJob(int groupId, int jobId, int taskType, char *inputFile)
   JobNode *jobNode = addJob(jobId, task);
   if (jobNode == NULL)
   {
+    logging_errors("Job Id %d could not be added : ", jobNode->numClients);
     // make this debug; printf("\nJob Id  %d could not be added", jobId);
     return false;
   }
@@ -123,7 +125,7 @@ bool assignJob(JobNode *jobNode, Task *task)
   {
     current->index = i;
    //add the index based on spliting here onto basePath
-   snprintf(buffer, MAX_SSH_CMD_SIZE, "%s:%sjob_%d/prob/input_p%d%d", ip, jd, jobNode->job.id, i/10, i%10);
+   snprintf(buffer, MAX_SSH_CMD_SIZE, "%s:%sjob_%d/prob/input_p%d%d%d", ip, jd, jobNode->job.id, i/100, i/10, i%10);
    // make this debug: printf("assignJob: %s\n", buffer);
    sh_send_encoded_data(current->client->cfd, buffer, task->taskType);
    current = current->next;
@@ -176,7 +178,7 @@ bool reassign_job(int cfd)
     //newClient = client->index;
     logging_informational("Reassigning new job");
   }
-   snprintf(buffer, MAX_SSH_CMD_SIZE, "%s:%sjob_%d/prob/input_p%d%d", ip, jd, jobNode->job.id, index/10, index%10);
+   snprintf(buffer, MAX_SSH_CMD_SIZE, "%s:%sjob_%d/prob/input_p%d%d%d", ip, jd, jobNode->job.id, index/100, index/10, index%10);
    sh_send_encoded_data(newClient->cfd, buffer, jobNode->job.task->taskType);
   // Freeing the old client now
   freeClient(jobNode->job.id, client);
@@ -205,18 +207,21 @@ bool initializeJobDll()
   pHead->job.head = NULL;
   pHead->job.tail = NULL;
   pHead->numClients = 0;
-  pTail = pHead; 
+  pthread_mutex_init(&pHead->lock, NULL);
+  pTail = pHead;
   return true;
 }
 
 JobNode* addJob(int jobId, Task *task)
 {
   logging_informational("%s : Job Id = %d", __func__, jobId);
+  pthread_mutex_lock(&pTail->lock);
 
   JobNode *new = (JobNode *)malloc(sizeof(JobNode));
   new->next = NULL;
   new->prev = pTail;
   new->job.id = jobId;
+  pthread_mutex_init(&new->lock, NULL);
   new->job.head = (ClientNode *)malloc(sizeof(ClientNode));
   new->job.head->prev = NULL;
   new->job.head->client = (Client *)0xdeadbeef;
@@ -226,9 +231,10 @@ JobNode* addJob(int jobId, Task *task)
   new->numClients = 0;
   pTail->next = new;
   pTail = new; 
+  pthread_mutex_unlock(&pTail->lock);
   return new; 
 }
-
+// below function is not called anywhere, it is not thread safe
 bool removeJob( int jobId)
 {
   logging_informational("%sRemoving : Job Id = %d",__func__ , jobId);
@@ -267,11 +273,16 @@ bool removeJob( int jobId)
 
 JobNode *getJobNode(int jobId)
 {
- // printf("Job Id = %d \n", jobId);
+  pthread_mutex_lock(&pHead->lock);
   JobNode *jobNode = pHead->next;
-  while((jobNode)&&(jobNode->job.id != jobId))
-   jobNode = jobNode->next;
-  
+  JobNode *tempJobNode = NULL;
+  pthread_mutex_unlock(&pHead->lock);
+  while((jobNode)&&(pthread_mutex_lock(&jobNode->lock))&&(jobNode->job.id != jobId))
+  {  
+   tempJobNode = jobNode->next;
+   pthread_mutex_unlock(&jobNode->lock);
+   jobNode = tempJobNode;
+  } 
   return jobNode;
 }
 
@@ -285,9 +296,11 @@ enum boolean updateJobResult(int cfd, char *value)
 
     if (client && client->jn) {
 	jn = client->jn;
+    pthread_mutex_lock(&jn->lock);
 	if (jn->job.result < result) {
 	    jn->job.result =  result;
 	}
+    pthread_mutex_unlock(&jn->lock);
     } else {
 	return FALSE;
     }
@@ -300,9 +313,11 @@ enum boolean updateJobResult(int cfd, char *value)
 	return FALSE;
     }
 
+    pthread_mutex_lock(&jn->lock);
     if (jn->numClients == 0)
 	logging_informational("Job Id: %d. The Result for [MAX] = %lld\n",
 			      client->jn->job.id, client->jn->job.result);
+    pthread_mutex_unlock(&jn->lock);
 
     return TRUE;
 }

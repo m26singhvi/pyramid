@@ -38,6 +38,7 @@ struct client_info {
     in_port_t cp; // client port
     enum boolean busy; // client's status
     job_node *jn; // jobs information
+    pthread_mutex_t lock;  // lock for each client_info
 };
 
 extern client_group_head *multicast_groups;

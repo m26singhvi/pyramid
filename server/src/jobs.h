@@ -37,6 +37,7 @@ typedef struct Job
 
 typedef struct jobNode
 {
+  pthread_mutex_t lock;  
   Job job;
   int numClients;
   struct jobNode *prev;
