@@ -211,7 +211,7 @@ sh_send_job_result_to_cli(int client_fd, Tlv tlv)
     char format_buffer[ONE_KB];
     int tc = 0;
     int c = 0;
-
+    printf("%s\n", __func__);
 //    printf("\nReady to send job Result to cli: %s at fd %d, tlv.type %d", tlv.value, client_fd, tlv.type);
     c = snprintf(format_buffer, ONE_KB, "[%s]", tlv.value);
     tc = sh_try_to_send_data(client_fd, storage_buffer, format_buffer, tc, c,

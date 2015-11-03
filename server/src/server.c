@@ -383,7 +383,9 @@ void handle_data(int client_fd, Tlv tlv)
          // and check if all the clients are done or not
          // if done, process the sub-results and remove the job
         //printf("AlgoMaxResult : [%s] sending to FD : [%d]",tlv.value, client_fd );
+        printf("Result Received \n");
 	updateJobResult(client_fd, tlv.value);
+        printf("Result Processed \n");
 	sh_send_job_result_to_cli(client_fd, tlv);
         //logging_notifications("Result received from client [%d] for problem [MAX]: %s", client_fd, tlv.value); 	
         break;

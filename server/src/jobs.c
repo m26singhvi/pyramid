@@ -69,7 +69,6 @@ bool initJob(int groupId, int jobId, int taskType, char *inputFile)
 ClientNode* addClientToJob(JobNode *jobNode, Client *client)
 {
    ClientNode *node = (ClientNode *)malloc(sizeof(ClientNode));
-//   printf("Node = %p\n", node); 
    node->client = client;
    node->next = NULL;
    node->prev = jobNode->job.tail;
@@ -82,12 +81,18 @@ ClientNode* addClientToJob(JobNode *jobNode, Client *client)
 bool freeClient(int jobId, Client *client)
 {
   if (jobId < 0)
+  {
+    printf("Job Id = %d \n", jobId);
    return false;
+  } 
 
   JobNode *jobNode = getJobNode(jobId);
   
   if (jobNode == NULL)
-   return false;
+  {
+    printf("JobNode is null \n");
+    return false;
+  }
 
   ClientNode *current = jobNode->job.head->next;
   while ((current)&&(current->client != client))
@@ -270,22 +275,49 @@ bool removeJob( int jobId)
 
   return true;
 }
+/*
+JobNode *getJobNode(int jobId)
+{
+  JobNode *jobNode = NULL;
+  JobNode *tempJobNode = NULL;
+  printf("%s\n", __func__);
+  if (pthread_mutex_lock(&pHead->lock)== 0)
+  {  
+   jobNode = pHead->next;
+     printf("%s 0\n", __func__);
+   while(jobNode)
+   {  
+     printf("%s 1\n", __func__);
+     if (pthread_mutex_lock(&jobNode->lock) == 0) {
+     printf("%s 2\n", __func__);
+        if (jobNode->job.id != jobId) {
+     printf("%s 3\n", __func__);
+    tempJobNode = jobNode->next;
+     printf("%s 4\n", __func__);
+    jobNode = tempJobNode;
+        }
+    pthread_mutex_unlock(&jobNode->lock);
+     printf("%s 5\n", __func__);
+    }
+   }
+   pthread_mutex_unlock(&pHead->lock);
+  }
+  else
+    printf("I can't do it \n");
+
+  return jobNode;
+}
+*/
 
 JobNode *getJobNode(int jobId)
 {
-  pthread_mutex_lock(&pHead->lock);
+ // printf("Job Id = %d \n", jobId);
   JobNode *jobNode = pHead->next;
-  JobNode *tempJobNode = NULL;
-  pthread_mutex_unlock(&pHead->lock);
-  while((jobNode)&&(pthread_mutex_lock(&jobNode->lock))&&(jobNode->job.id != jobId))
-  {  
-   tempJobNode = jobNode->next;
-   pthread_mutex_unlock(&jobNode->lock);
-   jobNode = tempJobNode;
-  } 
+  while((jobNode)&&(jobNode->job.id != jobId))
+   jobNode = jobNode->next;
+  
   return jobNode;
 }
-
 
 enum boolean updateJobResult(int cfd, char *value)
 {
@@ -309,15 +341,18 @@ enum boolean updateJobResult(int cfd, char *value)
 			  "for problem [MAX]: %lld",
 			  client->jn->job.id, client->cfd, result);
 
+    printf("Freeing Clients\n");
+    freeClient(jn->job.id, client);
     if (freeClient(jn->job.id, client) == FALSE) {
 	return FALSE;
     }
+    printf("Freed Clients: Clients Remaining = %d \n", jn->numClients);
 
-    pthread_mutex_lock(&jn->lock);
+    //pthread_mutex_lock(&jn->lock);
     if (jn->numClients == 0)
 	logging_informational("Job Id: %d. The Result for [MAX] = %lld\n",
 			      client->jn->job.id, client->jn->job.result);
-    pthread_mutex_unlock(&jn->lock);
+   // pthread_mutex_unlock(&jn->lock);
 
     return TRUE;
 }
