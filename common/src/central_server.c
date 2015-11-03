@@ -12,7 +12,7 @@
 
 char central_repo_ip[IP_ADDR_LEN];
 
-const char *job_directory = "/tmp/cohort/";
+const char *job_directory = "/";
 const char *username = "repository";
 const char *passwd = "ashuvenda";
 
@@ -34,7 +34,6 @@ db_server_divide (char *path,
 
    if (system(sshcmd) == 0)
    {
-//	printf("Split Successful \n");
 	logging_informational("Split Successful");
 	return SUCCESS;
    } else {

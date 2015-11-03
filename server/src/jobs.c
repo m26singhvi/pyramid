@@ -123,7 +123,7 @@ bool assignJob(JobNode *jobNode, Task *task)
   {
     current->index = i;
    //add the index based on spliting here onto basePath
-   snprintf(buffer, MAX_SSH_CMD_SIZE, "%s:%sjob_%d/prob/p%d%d", ip, jd, jobNode->job.id, i/10, i%10);
+   snprintf(buffer, MAX_SSH_CMD_SIZE, "%s:%sjob_%d/prob/input_p%d%d", ip, jd, jobNode->job.id, i/10, i%10);
    // make this debug: printf("assignJob: %s\n", buffer);
    sh_send_encoded_data(current->client->cfd, buffer, task->taskType);
    current = current->next;
@@ -176,7 +176,7 @@ bool reassign_job(int cfd)
     //newClient = client->index;
     logging_informational("Reassigning new job");
   }
-   snprintf(buffer, MAX_SSH_CMD_SIZE, "%s:%sjob_%d/prob/p%d%d", ip, jd, jobNode->job.id, index/10, index%10);
+   snprintf(buffer, MAX_SSH_CMD_SIZE, "%s:%sjob_%d/prob/input_p%d%d", ip, jd, jobNode->job.id, index/10, index%10);
    sh_send_encoded_data(newClient->cfd, buffer, jobNode->job.task->taskType);
   // Freeing the old client now
   freeClient(jobNode->job.id, client);
