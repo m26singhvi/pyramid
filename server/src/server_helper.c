@@ -133,12 +133,25 @@ sh_display_job_details(int cfd, long long int job_id)
 void
 sh_display_job_results(int cfd, long long int job_id)
 {
-   char storage_buffer[ONE_KB];
+    char storage_buffer[ONE_KB];
     char format_buffer[ONE_KB];
     int tc = 0;
     int c = 0;
 
-    c = snprintf(format_buffer, ONE_KB, "\nJob %lld, status : Done", job_id);
+     /* Get Job result for given job_id */
+    JobNode *jobNode = getJobNode(job_id);
+  
+    if (jobNode == NULL)
+    {
+  	 c = snprintf(format_buffer, ONE_KB, "\nInvalid Job Id ");
+    } else if(jobNode->numClients) {
+        c = snprintf(format_buffer, ONE_KB, "\nJob %lld, Result : Job still in Progress..", job_id);
+    } else {
+	c = snprintf(format_buffer, ONE_KB, "\nJob %lld, Result : %lld", job_id, jobNode->job.result);	
+    }
+ 
+ 
+//    c = snprintf(format_buffer, ONE_KB, "\nJob %lld, status : Done", job_id);
     tc = sh_try_to_send_data(cfd, storage_buffer, format_buffer, tc, c,
                                         CLI_DATA);
 
@@ -311,9 +324,9 @@ sh_parse_cmd (int cfd, char *buff)
         if(!initJob(group, sh_job_id, task, input_file) == FAILURE)
 	{
 	    sh_send_job_failure_to_cli(cfd, sh_job_id);
-	}else {
+	}/*else {
  	    sh_display_job_results(cfd, job_id);
-	}
+	}*/
         printf("\nDone");
 	break;
     case LOGGING_LEVEL_ERROR:

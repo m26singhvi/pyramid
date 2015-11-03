@@ -275,7 +275,7 @@ void cli_help(void) {
 		printf("\n\thelp");
 		printf("\n\tclear");
 //		printf("\n\tshow job-details <job_id>");
-//		printf("\n\tshow job-result <job-id>");
+		printf("\n\tshow job-result <job-id>");
 		
 	 printf("\n Config Commands:");	
 		printf("\n\tset repository-address <ip-address/path>");
@@ -412,9 +412,9 @@ void parse_cli(char *cli_string) {
     } else if((!strncmp(cli_string_trimmed, "set repository-address ", strlen("set repository-address"))) && (num_words == 3)) {
         cli_set_repository_address(words[2]);
 /*    } else if((!strncmp(cli_string_trimmed, "show job-details", strlen("show job-details"))) && (num_words == 3)) {
-        cli_print_job_details(strtol(words[2], NULL, 10));
-    } else if((!strncmp(cli_string_trimmed, "show job-result", strlen("show job-result"))) && (num_words == 3)) {
-   	cli_print_job_result(strtol(words[2], NULL, 10));*/
+        cli_print_job_details(strtol(words[2], NULL, 10));*/
+    } else if((!strncmp(cli_string_trimmed, "show job-result ", strlen("show job-result"))) && (num_words == 3)) {
+   	cli_print_job_result(strtol(words[2], NULL, 10));
     } else if((!strncmp(cli_string_trimmed, "execute ", strlen("execute"))) && (num_words == 4)) {	
        int algoType = getAlgoType(words[1]);
        if (algoType == -1)
