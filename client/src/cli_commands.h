@@ -23,7 +23,7 @@ void cli_print_job_details(long long int);
 
 void cli_print_job_result(long long int);
 
-void cli_set_repository_address(char *);
+void cli_set_repository_address(char *, char *, char *, char *);
 
 void cli_set_job_result_queue_size(int);
 

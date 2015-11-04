@@ -13,11 +13,23 @@
 #include "tlv.h"
 #include "logging.h"
 #include "jobs.h"
+//#include "central_server.h"
 #include "dynamic_lib_interface.h"
 
 long long int sh_job_id = 0; 
 char central_repo_ip[20]; 
 int job_queue_size = 10; // Default job queue size set to 10
+/*
+extern char job_directory[];
+extern char username[];
+extern char passwd[];
+extern char job_timeout;
+*/
+
+char job_directory[500];
+char username[20];
+char passwd[20];
+char job_timeout;
 
 void
 sh_send_encoded_data (int fd, char *data, Attribute type)
@@ -234,7 +246,7 @@ sh_execute_job(int cfd, long long int job_id, int task, int multicast_groupid, c
 }
 
 void
-sh_set_repository(int cfd, char *repository)
+sh_set_repository(int cfd, char *repository, char *path, char *user, char *pwd)
 {
     char storage_buffer[ONE_KB];
     char format_buffer[ONE_KB];
@@ -242,12 +254,39 @@ sh_set_repository(int cfd, char *repository)
     int c = 0;
     enum boolean set = TRUE;
 
-    if (strncpy(central_repo_ip, repository, 20) == NULL) {
+    if ((strncpy(central_repo_ip, repository, 20) == NULL) ||
+	 (strncpy(job_directory, path, 500) == NULL) ||
+	 (strncpy(username, user, 20) == NULL) || 
+	 (strncpy(passwd, pwd, 20) == NULL)) {
 	set = FALSE;
     }
 
     c = snprintf(format_buffer, ONE_KB, "\nCentral repository %sset to %s ",
 			set ? "" : "un", central_repo_ip);
+    tc = sh_try_to_send_data(cfd, storage_buffer, format_buffer, tc, c,
+                                        CLI_DATA);
+
+    if (tc) {
+        sh_send_encoded_data(cfd, storage_buffer, CLI_DATA);
+    }
+
+//   printf("\ncfd - %d, repository %s\n", cfd, repository);
+}
+
+void
+sh_set_job_timeout(int cfd, int timeout)
+{
+    char storage_buffer[ONE_KB];
+    char format_buffer[ONE_KB];
+    int tc = 0;
+    int c = 0;
+    enum boolean set = TRUE;
+
+    job_timeout = timeout;
+    set = FALSE;
+
+    c = snprintf(format_buffer, ONE_KB, "\nJob timeout %sset to %d ",
+                        set ? "" : "un", job_timeout);
     tc = sh_try_to_send_data(cfd, storage_buffer, format_buffer, tc, c,
                                         CLI_DATA);
 
@@ -284,8 +323,12 @@ sh_parse_cmd (int cfd, char *buff)
     long long int job_id = 0;
     char buf[100];
     char *repo = "";
+    char *path = "";
+    char *user = "";
+    char *pwd = "";
     int queue_size = 0;
     const char delim[2] = "|";
+    int job_timeout = 10;
     strcpy(buf, buff);
 
     switch (atoi(strtok(buf, delim))) {
@@ -305,7 +348,14 @@ sh_parse_cmd (int cfd, char *buff)
 	break;
     case SET_REPOSITORY:
         repo = strtok(NULL, delim);
-        sh_set_repository(cfd, repo);
+	path = strtok(NULL, delim);
+	user = strtok(NULL, delim);
+	pwd = strtok(NULL, delim);
+        sh_set_repository(cfd, repo, path, user, pwd);
+	break;
+    case SET_JOB_TIMEOUT:
+	job_timeout = atoi(strtok(NULL, delim));
+	sh_set_job_timeout(cfd, job_timeout); 
 	break;
     case SET_JOB_QUEUE_SIZE:
         queue_size = atoi(strtok(NULL, delim));

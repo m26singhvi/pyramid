@@ -11,10 +11,17 @@
 #define FAILURE 1
 
 char central_repo_ip[IP_ADDR_LEN];
+char job_directory[JOB_DIR_PATH_LEN];
+char username[USERNAME_LEN];
+char passwd[PASSWORD_LEN];
+char job_timeout;
 
+
+#if 0
 const char *job_directory = "/";
 const char *username = "repository";
 const char *passwd = "ashuvenda";
+#endif
 
 int
 db_server_divide (char *path,

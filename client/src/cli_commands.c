@@ -13,7 +13,7 @@
 #include "logging.h"
 #include "dynamic_lib_interface.h"
 
-#define CLI_MAX_WORDS 5
+#define CLI_MAX_WORDS 8
 
 int cli_fd;
 bool init_cli_interface = false;
@@ -278,8 +278,9 @@ void cli_help(void) {
 		printf("\n\tshow job-result <job-id>");
 		
 	 printf("\n Config Commands:");	
-		printf("\n\tset repository-address <ip-address/path>");
+		printf("\n\tset repository <ip-address> <path> <username> <pwd>");
 //		printf("\n\tset job-result-queue size <size>");
+		printf("\n\tset job timeout <t sec>");
 		
 	 printf("\n Execute Commands:");
 		printf("\n\texecute max/min <file_name> <multicast_group_id>");
@@ -344,15 +345,25 @@ void cli_print_job_result(long long int job_id) {
     printf("\n");
 }
 
-void cli_set_repository_address(char *address) {
+void cli_set_repository_address(char *ip, char *path, char *username, char *pwd) {
     char buffer[80];
     memset(buffer, 0, sizeof buffer);
-    sprintf(buffer, "%d|%s", SET_REPOSITORY, address);
+    sprintf(buffer, "%d|%s|%s|%s|%s", SET_REPOSITORY, ip, path, username, pwd);
 
-    printf("\nCentral data repository address updated: %s", address);
+//    printf("\nCentral data repository address updated: %s", address);
     request_cli_data(buffer);
     receive_data();
     printf("\n");
+}
+
+void cli_set_job_timeout(int timeout) {
+    char buffer[10];
+    memset(buffer, 0, sizeof buffer);
+    sprintf(buffer, "%d|%d", SET_JOB_TIMEOUT, timeout);
+    request_cli_data(buffer);
+    receive_data();
+    printf("\n");
+
 }
 
 void cli_set_job_result_queue_size(int size) {
@@ -409,10 +420,12 @@ void parse_cli(char *cli_string) {
         cli_clear_screen();
  /*   } else if((!strncmp(cli_string_trimmed, "set job-result-queue size", strlen("set job-result-queue size"))) && (num_words == 4)) {
 	cli_set_job_result_queue_size(atoi(words[3]));*/
-    } else if((!strncmp(cli_string_trimmed, "set repository-address ", strlen("set repository-address"))) && (num_words == 3)) {
-        cli_set_repository_address(words[2]);
+    } else if((!strncmp(cli_string_trimmed, "set repository ", strlen("set repository"))) && (num_words == 6)) {
+        cli_set_repository_address(words[2], words[3], words[4], words[5]);
 /*    } else if((!strncmp(cli_string_trimmed, "show job-details", strlen("show job-details"))) && (num_words == 3)) {
         cli_print_job_details(strtol(words[2], NULL, 10));*/
+    } else if((!strncmp(cli_string_trimmed, "set job timeout ", strlen("set job timeout"))) && (num_words == 4)) {
+	cli_set_job_timeout(atoi(words[3]));
     } else if((!strncmp(cli_string_trimmed, "show job-result ", strlen("show job-result"))) && (num_words == 3)) {
    	cli_print_job_result(strtol(words[2], NULL, 10));
     } else if((!strncmp(cli_string_trimmed, "execute ", strlen("execute"))) && (num_words == 4)) {	
