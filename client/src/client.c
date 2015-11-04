@@ -211,9 +211,6 @@ client_get_file_from_ctrl_repo (const char *cntrl_repo_path)
     if (system(buffer)) {};
     sleep(1);
 
-    if(local_path)
-    {}
-
     return TRUE;
 }
 
