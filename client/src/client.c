@@ -196,11 +196,12 @@ main (int argc, char* argv[])
 }
 
 static enum boolean
-client_get_file_from_ctrl_repo (const char *cntrl_repo_path)
+client_get_file_from_ctrl_repo (const char *cntrl_repo_path,
+				const char *local_path)
 {
     char buffer[MAX_SSH_CMD_SIZE] = {0};
-    snprintf(buffer, MAX_SSH_CMD_SIZE, "wget http://%s",
-			cntrl_repo_path);
+    snprintf(buffer, MAX_SSH_CMD_SIZE, "wget http://%s -O %s",
+			cntrl_repo_path, local_path);
 
     // add debug here
 #if 0
@@ -291,7 +292,7 @@ handle_exec_data(int server_fd, Tlv tlv)
 	    void * plugin_handle =NULL;
             ASSIGN_FUNC_PTR("main_api",main_api,&plugin_handle);
             if((client_generate_in_out_filenames_from_path(in_file, out_file, 100, buffer) == TRUE) &&
-	       (client_get_file_from_ctrl_repo(tlv.value) == TRUE) &&
+	       (client_get_file_from_ctrl_repo(tlv.value, in_file) == TRUE) &&
 	       (main_api(in_file, out_file, FIND_MAX) == API_SUCCESS) &&
 	       (client_open_file_to_read_max(out_file, buffer) == TRUE)) {
                 send_data(server_fd, buffer, ALGO_MAX);

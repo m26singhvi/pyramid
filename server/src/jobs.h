@@ -22,6 +22,7 @@ typedef struct ClientNode
   struct ClientNode *prev;
   struct ClientNode *next;
   int index;
+  int jid;
 }ClientNode;
 
 typedef struct Job

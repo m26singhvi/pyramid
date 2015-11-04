@@ -301,6 +301,7 @@ void  receive_data (int client_fd)
     if (done)
     {
         logging_notifications("Disconnect client: %d", client_fd);
+	reassign_job(client_fd);
 	server_del_one_client_fd(cih, client_fd);
 
         /* Closing the descriptor will make epoll remove it

@@ -13,6 +13,72 @@
 #include "pthread.h"
 #include "dynamic_lib_interface.h"
 
+struct reassignQ {
+    ClientNode *head;
+    ClientNode *tail;
+} reassignQ;
+
+void
+enqueue_pending_job (JobNode *jn, ClientNode *cn)
+{
+    if (jn == NULL || cn == NULL)
+	return;
+    if (reassignQ.head) {
+	cn->next = reassignQ.head;
+	cn->prev = NULL;
+	reassignQ.head->prev = cn;
+    } else {
+	reassignQ.tail = cn;
+    }
+    reassignQ.head = cn;
+}
+
+ClientNode*
+dequeue_pending_job (JobNode *jn)
+{
+    ClientNode *cur = reassignQ.tail;
+
+    while (cur && (cur->jid != jn->job.id)) {
+	cur = cur->prev;
+    }
+
+    if (cur) {
+	cur->prev->next = cur->next;
+	cur->next->prev = cur->prev;
+    }
+
+    return cur;
+}
+
+enum boolean
+assign_pending_job (JobNode *jn, ClientNode *cn, Client *reassign2client)
+{
+    
+    char buffer [MAX_SSH_CMD_SIZE] = {0};
+    const char * jd = cntrl_srv_get_job_directory();
+    const char * ip = cntrl_srv_get_central_repo_ip();
+
+    if (jn == NULL || cn == NULL || reassign2client == NULL)
+	return FALSE;
+
+    ClientNode *reassign2cn = getClientNode(jn, reassign2client);
+
+    if (reassign2cn == NULL)
+	return FALSE;
+
+    int index = reassign2cn->index = cn->index;
+    free(cn);
+
+    int cfd = reassign2cn->client->cfd;
+
+    logging_informational("Pending job reassigned to client %d", cfd);
+
+    
+    snprintf(buffer, MAX_SSH_CMD_SIZE, "%s:%sjob_%d/prob/input_p%d%d%d", ip, jd, jn->job.id, index/100, index/10, index%10);
+    sh_send_encoded_data(cfd, buffer, jn->job.task->taskType);
+
+    return TRUE;
+}
 
 bool initJob(int groupId, int jobId, int taskType, char *inputFile)
 {
@@ -70,6 +136,7 @@ ClientNode* addClientToJob(JobNode *jobNode, Client *client)
 {
    ClientNode *node = (ClientNode *)malloc(sizeof(ClientNode));
    node->client = client;
+   node->jid = jobNode->job.id;
    node->next = NULL;
    node->prev = jobNode->job.tail;
    jobNode->job.tail->next = node;
@@ -171,9 +238,14 @@ bool reassign_job(int cfd)
   Client *newClient = NULL;
   if (cg == NULL)
   {
-   logging_informational("No free clients to reassign the job");  
+   logging_informational("No free clients to reassign the job, adding to pending job queue");  
    // Reassigning to the same client
-   newClient = client;
+   oldcn->next->prev = oldcn->prev;
+   oldcn->prev->next = oldcn->next;
+   oldcn->prev = oldcn->next = NULL;
+   oldcn->client = NULL;
+   enqueue_pending_job(jobNode, oldcn);
+   return true;
   }  
   else
   {
@@ -340,9 +412,12 @@ enum boolean updateJobResult(int cfd, char *value)
     logging_notifications("Job Id: %d. Result received from client [%d] "			\
 			  "for problem [MAX]: %lld",
 			  client->jn->job.id, client->cfd, result);
-
+    ClientNode *cn = dequeue_pending_job(jn);
+    if (cn) {
+	assign_pending_job(jn, cn, client);
+	return TRUE;
+    }
     printf("Freeing Clients\n");
-    freeClient(jn->job.id, client);
     if (freeClient(jn->job.id, client) == FALSE) {
 	return FALSE;
     }
