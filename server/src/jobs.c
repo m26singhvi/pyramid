@@ -231,6 +231,9 @@ bool reassign_job(int cfd)
   ClientNode *cn = NULL; 
 
  
+  if (oldcn == NULL)
+	return true;
+
   client_group_head *cgh = server_get_client_gid_head(groupId);
   client_group *cg = cgh->h;
   while(cg)
