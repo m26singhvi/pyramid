@@ -254,6 +254,7 @@ bool reassign_job(int cfd)
    oldcn->prev = oldcn->next = NULL;
    oldcn->client = NULL;
    enqueue_pending_job(jobNode, oldcn);
+   jobNode->numClients--;
    return true;
   }  
   else
