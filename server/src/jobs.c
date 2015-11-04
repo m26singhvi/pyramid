@@ -23,13 +23,16 @@ enqueue_pending_job (JobNode *jn, ClientNode *cn)
 {
     if (jn == NULL || cn == NULL)
 	return;
+
+    cn->next = reassignQ.head;
+    cn->prev = NULL;
+
     if (reassignQ.head) {
-	cn->next = reassignQ.head;
-	cn->prev = NULL;
 	reassignQ.head->prev = cn;
     } else {
 	reassignQ.tail = cn;
     }
+
     reassignQ.head = cn;
 }
 
@@ -43,8 +46,14 @@ dequeue_pending_job (JobNode *jn)
     }
 
     if (cur) {
-	cur->prev->next = cur->next;
-	cur->next->prev = cur->prev;
+	if (cur->prev)
+	    cur->prev->next = cur->next;
+	else
+	    reassignQ.head = cur->next;
+	if (cur->next)
+	    cur->next->prev = cur->prev;
+	else
+	    reassignQ.tail = cur->prev;
     }
 
     return cur;
