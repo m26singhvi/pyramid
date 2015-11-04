@@ -9,7 +9,7 @@
 #include <sys/epoll.h>
 #include <errno.h>
 #include "dynamic_lib_interface.h"
-
+#include "thpool.h"
 #include "server.h"
 
 #include "common.h" 
@@ -23,10 +23,18 @@
 
 unsigned int g_groups[255];
 int fd_cli;
-
+threadpool g_thpool;
+pthread_mutex_t lock_job_id;
+        
+void *hello(void *string)
+{
+  printf("%s\n", (char *)string);
+  return NULL;
+}    
 
 #define MAX_EVENTS 2500 * 4
 
+static int start_threads(char* num);
 
 static int make_socket_non_blocking (int sfd)
 {
@@ -140,7 +148,10 @@ static void init_and_listen_epoll_events(int server_fd)
 
     while(1){
         /*Wait for new epoll event*/
-        int nfds = epoll_wait(epollfd, events, MAX_EVENTS, -1);
+       int nfds;
+       do {
+           nfds = epoll_wait(epollfd, events, MAX_EVENTS, -1);
+       } while (nfds < 0 && errno == EINTR);
  //       printf("Got some events nfds %d\n",nfds);
         if (nfds == -1) {
             perror("epoll_wait");
@@ -159,6 +170,7 @@ static void init_and_listen_epoll_events(int server_fd)
 }
 
 static void server_cleanup(int server_tid){
+    pthread_mutex_destroy(&lock_job_id);
     close(server_tid);
 }
 
@@ -201,7 +213,7 @@ server_alloc_memory (void)
 int main (int argc, char* argv[]) {
     int server_port ;
     /*Validate and convert input port */
-    if(argc != 2 
+    if(argc < 2 
             || (server_port = validate_port_number(argv[1])) == 0){
         logging_errors("Invalid port entered!");
 	logging_informational("Assuming port: 51729");
@@ -220,6 +232,13 @@ int main (int argc, char* argv[]) {
         logging_informational("Server started at port : %d", server_port);
         /* Listen for new connections */
         initializeJobDll();
+        if(argc >=3){
+            start_threads(argv[2]);
+        } else {
+            logging_informational("Assuming 10 threads");
+            start_threads("10");
+            /* Waiting for all threads to complete */
+        }
         init_and_listen_epoll_events(server_tid);
 
         /* Waiting for all threads to complete */
@@ -364,7 +383,9 @@ void handle_data(int client_fd, Tlv tlv)
          // and check if all the clients are done or not
          // if done, process the sub-results and remove the job
         //printf("AlgoMaxResult : [%s] sending to FD : [%d]",tlv.value, client_fd );
+        printf("Result Received \n");
 	updateJobResult(client_fd, tlv.value);
+        printf("Result Processed \n");
 	sh_send_job_result_to_cli(client_fd, tlv);
         //logging_notifications("Result received from client [%d] for problem [MAX]: %s", client_fd, tlv.value); 	
         break;
@@ -380,3 +401,35 @@ void handle_data(int client_fd, Tlv tlv)
     break;
    }
 }
+
+static void init_all_locks()
+{
+  if (pthread_mutex_init(&lock_job_id, NULL) != 0)
+  {  
+    logging_errors("Lock initialization Failed!");
+    exit(0);
+  }  
+}
+
+static int start_threads(char* num)
+{
+    char *temp;
+    long int num_threads = strtol(num, &temp, 10);
+    if(*temp != '\0'  
+            || num_threads== LONG_MIN 
+            || num_threads == LONG_MAX
+      ){
+        /* See man strol for more info*/
+        return 0;
+    }
+
+   g_thpool = thpool_init(num_threads);
+   printf("starting threads \n");
+   init_all_locks();
+   thpool_add_work(g_thpool, hello, "Hello World");
+   thpool_wait(g_thpool);
+   return 0;
+}
+
+
+

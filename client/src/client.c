@@ -209,7 +209,10 @@ client_get_file_from_ctrl_repo (const char *cntrl_repo_path)
     }
 #endif
     if (system(buffer)) {};
-    sleep(10);
+    sleep(1);
+
+    if(local_path)
+    {}
 
     return TRUE;
 }
@@ -295,6 +298,7 @@ handle_exec_data(int server_fd, Tlv tlv)
 	       (main_api(in_file, out_file, FIND_MAX) == API_SUCCESS) &&
 	       (client_open_file_to_read_max(out_file, buffer) == TRUE)) {
                 send_data(server_fd, buffer, ALGO_MAX);
+                printf("Maximum number sent to server\n");
             } else {
                 send_data(server_fd, "\nClientErrorType\n", ALGO_ERROR);
             }
