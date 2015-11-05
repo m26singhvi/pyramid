@@ -427,7 +427,6 @@ static int start_threads(char* num)
    g_thpool = thpool_init(num_threads);
    printf("starting threads \n");
    init_all_locks();
-   thpool_add_work(g_thpool, hello, "Hello World");
    thpool_wait(g_thpool);
    return 0;
 }

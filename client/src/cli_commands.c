@@ -230,7 +230,6 @@ static int cli_parse_line(const char *line, char *words[], int max_words)
             if (!*p)
                 break;
 
-
             if (inquote)
                 p++; /* skip over trailing quote */
 
