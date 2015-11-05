@@ -221,10 +221,14 @@ bool reassign_job(int cfd)
   logging_notifications("Reassigning Job");
   client_info_head *cih = server_get_client_info_head(cfd);
   Client  *client = server_search_client_fd(cih, cfd);
+   if (client == NULL)
+    return true;
   char buffer [MAX_SSH_CMD_SIZE] = {0};
   const char * jd = cntrl_srv_get_job_directory();
   const char * ip = cntrl_srv_get_central_repo_ip();
   JobNode *jobNode = client->jn;
+   if (jobNode == NULL)
+      return true;
   int groupId = client->cg->gid;
   int index = 0;
   ClientNode *oldcn = getClientNode(jobNode, client);
