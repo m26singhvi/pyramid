@@ -282,7 +282,7 @@ void cli_help(void) {
 		printf("\n\tset job timeout <t sec>");
 		
 	 printf("\n Execute Commands:");
-		printf("\n\texecute max/min <file_name> <multicast_group_id>");
+		printf("\n\texecute max <file_name> <multicast_group_id>");
 	printf("\n");
 }
 
