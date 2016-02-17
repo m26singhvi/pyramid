@@ -218,7 +218,6 @@ bool assignJob(JobNode *jobNode, Task *task)
 
 bool reassign_job(int cfd)
 {
-  logging_notifications("Reassigning Job");
   client_info_head *cih = server_get_client_info_head(cfd);
   Client  *client = server_search_client_fd(cih, cfd);
    if (client == NULL)
@@ -229,6 +228,8 @@ bool reassign_job(int cfd)
   JobNode *jobNode = client->jn;
    if (jobNode == NULL)
       return true;
+  
+  logging_notifications("Reassigning Job");
   int groupId = client->cg->gid;
   int index = 0;
   ClientNode *oldcn = getClientNode(jobNode, client);
